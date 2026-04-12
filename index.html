@@ -775,8 +775,6 @@ async function loadFiasEcosystem() {
     document.getElementById('s-fiasPrice').textContent = '⬡ n/a';
   }
 }
-loadFiasEcosystem();
-
 // ─── COIN ID MAP (CoinGecko) ──────────────────────────────────
 const COIN_IDS = {
   'Bitcoin (BTC)':          'bitcoin',
@@ -1105,6 +1103,14 @@ Schrijf in het Nederlands.`,
   btn.disabled = false;
   btn.textContent = '⬡ NIEUW SIGNAAL GENEREREN';
 }
+
+// ─── INIT ─────────────────────────────────────────────────────
+(function init() {
+  const saved = localStorage.getItem('signals_apikey');
+  if (saved) document.getElementById('apiKey').value = saved;
+  updateCoinDropdown();
+  loadFiasEcosystem();
+})();
 </script>
 </body>
 </html>
