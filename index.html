@@ -470,9 +470,41 @@
     ⬡ GENEREER TRADING SIGNAAL
   </button>
 
+  <!-- SCAN knop -->
+  <button class="analyze-btn" id="scanBtn" onclick="runScan()" style="border-color:var(--gold);color:var(--gold);box-shadow:0 0 20px rgba(255,170,0,0.1);margin-bottom:0.5rem">
+    🔍 SCAN ALLE COINS OP KANSEN
+  </button>
+
   <!-- Disclaimer -->
   <div class="disclaimer" style="margin-bottom:1rem">
     ⚠️ UITSLUITEND VOOR EDUCATIEVE DOELEINDEN · GEEN FINANCIEEL ADVIES · CRYPTO TRADING BRENGT RISICO'S MET ZICH MEE
+  </div>
+
+  <!-- SCAN Results -->
+  <div id="scanResults" style="display:none;margin-bottom:1rem">
+    <div style="
+      background:var(--card);border:1px solid rgba(255,170,0,0.3);
+      border-radius:8px;overflow:hidden;animation:fadeUp 0.35s ease both
+    ">
+      <div style="
+        display:flex;align-items:center;gap:0.6rem;
+        padding:0.7rem 1rem;border-bottom:1px solid var(--border);
+        background:rgba(255,170,0,0.05)
+      ">
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:0.58rem;
+          letter-spacing:0.1em;padding:3px 7px;border-radius:3px;
+          background:rgba(255,170,0,0.1);color:var(--gold);
+          border:1px solid rgba(255,170,0,0.3)">🔍 MARKET SCANNER</span>
+        <span style="font-size:0.82rem;font-weight:500;flex:1">Top Handelskansen</span>
+        <span id="scanTime" style="font-family:'IBM Plex Mono',monospace;font-size:0.55rem;color:var(--muted)"></span>
+      </div>
+      <div id="scanBody" style="
+        padding:1rem;font-size:0.78rem;line-height:1.65;
+        color:#111111;background:#ffffff;min-height:60px
+      ">
+        <div class="dots"><span></span><span></span><span></span></div>
+      </div>
+    </div>
   </div>
 
   <!-- Results -->
@@ -711,7 +743,135 @@ async function fetchLivePrice(coin) {
   return null;
 }
 
-// ─── MAIN ANALYSIS ────────────────────────────────────────────
+// ─── MARKET SCANNER ──────────────────────────────────────────
+async function fetchTrendingDex() {
+  try {
+    // DexScreener trending tokens
+    const res = await fetch('https://api.dexscreener.com/token-boosts/top/v1');
+    const data = await res.json();
+    // Pak top 10 unieke tokens
+    const seen = new Set();
+    const tokens = [];
+    for (const item of (data || [])) {
+      const name = item.tokenAddress;
+      if (!seen.has(name) && item.chainId === 'ethereum' || item.chainId === 'bsc' || item.chainId === 'solana') {
+        seen.add(name);
+        tokens.push({ symbol: item.description || item.tokenAddress.slice(0,8), address: item.tokenAddress, chain: item.chainId });
+        if (tokens.length >= 8) break;
+      }
+    }
+    return tokens;
+  } catch(e) { return []; }
+}
+
+async function fetchDexPrices(tokens) {
+  const lines = [];
+  await Promise.allSettled(tokens.map(async t => {
+    try {
+      const res = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${t.address}`);
+      const data = await res.json();
+      const pair = data.pairs?.[0];
+      if (pair && pair.priceUsd) {
+        const p  = parseFloat(pair.priceUsd);
+        const ch = parseFloat(pair.priceChange?.h24 || 0);
+        const vol = pair.volume?.h24
+          ? (pair.volume.h24 > 1e6 ? '$'+(pair.volume.h24/1e6).toFixed(1)+'M' : '$'+pair.volume.h24.toFixed(0))
+          : '?';
+        const liq = pair.liquidity?.usd
+          ? '$'+(pair.liquidity.usd/1e3).toFixed(0)+'K liq'
+          : '';
+        lines.push(`${pair.baseToken?.symbol || t.symbol} (${t.chain}): $${p < 0.01 ? p.toFixed(6) : p.toFixed(4)} | 24h: ${ch.toFixed(2)}% | Vol: ${vol} ${liq}`);
+      }
+    } catch(e) {}
+  }));
+  return lines;
+}
+
+async function runScan() {
+  const apiKey = document.getElementById('apiKey').value.trim();
+  if (!apiKey) { alert('Vul eerst je Anthropic API key in!'); return; }
+
+  const risk   = document.getElementById('riskProfile').value;
+  const amount = document.getElementById('amount').value;
+  const tf     = document.getElementById('timeframe').value;
+
+  const scanBtn = document.getElementById('scanBtn');
+  scanBtn.disabled = true;
+  scanBtn.textContent = '🔍 KOERSEN SCANNEN...';
+
+  const scanResults = document.getElementById('scanResults');
+  scanResults.style.display = 'block';
+  document.getElementById('scanBody').innerHTML = '<div class="dots"><span></span><span></span><span></span></div>';
+
+  // 1. Vaste coins ophalen
+  const scanCoins = [
+    'Bitcoin (BTC)', 'Ethereum (ETH)', 'Solana (SOL)',
+    'BNB (BNB)', 'XRP (XRP)', 'Cardano (ADA)',
+    'Avalanche (AVAX)', 'FIAS (FIAS)', 'DevvE (DevvE)'
+  ];
+
+  scanBtn.textContent = '🔍 VASTE COINS OPHALEN...';
+  const priceResults = await Promise.allSettled(
+    scanCoins.map(c => fetchLivePrice(c).then(p => ({ coin: c, price: p })))
+  );
+
+  const knownLines = priceResults
+    .filter(r => r.status === 'fulfilled' && r.value.price)
+    .map(r => {
+      const { coin, price } = r.value;
+      const p  = price.usd;
+      const ch = price.usd_24h_change?.toFixed(2) ?? '?';
+      const vol = price.usd_24h_vol
+        ? (price.usd_24h_vol > 1e9 ? '$'+(price.usd_24h_vol/1e9).toFixed(2)+'B' : '$'+(price.usd_24h_vol/1e6).toFixed(1)+'M')
+        : '?';
+      return `${coin}: $${p < 0.01 ? p.toFixed(6) : p.toLocaleString('en-US')} | 24h: ${ch}% | Vol: ${vol}`;
+    });
+
+  // 2. Trending DexScreener tokens ophalen
+  scanBtn.textContent = '🔍 TRENDING TOKENS SCANNEN...';
+  const trendingTokens = await fetchTrendingDex();
+  const trendingLines  = trendingTokens.length > 0 ? await fetchDexPrices(trendingTokens) : [];
+
+  scanBtn.textContent = '🔍 AI ANALYSEERT...';
+
+  const allLines = [
+    '=== BEKENDE COINS ===',
+    ...knownLines,
+    '',
+    '=== TRENDING / NIEUWE TOKENS (DexScreener) ===',
+    ...(trendingLines.length > 0 ? trendingLines : ['Geen trending data beschikbaar'])
+  ].join('\n');
+
+  try {
+    const result = await callClaude(
+      `Je bent een crypto markt scanner AI. Analyseer de onderstaande live marktdata — zowel bekende coins als trending/nieuwe tokens van DexScreener.
+
+Identificeer de TOP 3 meest interessante handelskansen over de HELE lijst (bekende én nieuwe tokens).
+Criteria: momentum, volume, liquiditeit, risk/reward, trend.
+Risicoprofiel: ${risk} | Budget: $${amount} | Tijdframe: ${tf}
+
+Gebruik dit format voor elke kans:
+🥇/🥈/🥉 [COIN/TOKEN] — [BUY/SELL/HOLD]
+📊 Reden: [1 zin waarom]
+🎯 Kans: [%] | ⚠️ Risico: [LAAG/MEDIUM/HOOG]
+💡 Actie: [concreet wat te doen]
+⚠️ Let op: [1 waarschuwing bij nieuwe/kleine tokens]
+
+Sluit af met 1 zin algemeen marktsentiment. Schrijf in het Nederlands. Geen garanties, wees eerlijk over risico's van kleine tokens.`,
+      allLines
+    );
+
+    document.getElementById('scanBody').innerHTML = renderMd(result);
+    document.getElementById('scanTime').textContent =
+      'bijgewerkt ' + new Date().toLocaleTimeString('nl-NL', {hour:'2-digit', minute:'2-digit'});
+  } catch(e) {
+    document.getElementById('scanBody').innerHTML =
+      '<span style="color:var(--red)">❌ ' + e.message + '</span>';
+  }
+
+  scanBtn.disabled = false;
+  scanBtn.textContent = '🔍 SCAN ALLE COINS OP KANSEN';
+}
 async function runAnalysis() {
   const apiKey = document.getElementById('apiKey').value.trim();
   if (!apiKey) {
