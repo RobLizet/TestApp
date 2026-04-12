@@ -1,668 +1,741 @@
 <!DOCTYPE html>
+
 <html lang="nl">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Crypto Trading Signals</title>
+<title>SignalsLeverage</title>
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#00c8ff">
+<meta name="theme-color" content="#ff3355">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="application-name" content="SignalsLev">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Signals">
-<link rel="apple-touch-icon" href="icons/icon-192.png">
-<meta name="description" content="AI crypto trading signalen">
+<meta name="apple-mobile-web-app-title" content="SignalsLev">
+<meta name="description" content="FIAS Arche · Leverage Trading Systeem">
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&family=Bebas+Neue&family=DM+Sans:wght@300;400;500&family=Dancing+Script:wght@600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&family=Exo+2:wght@300;400;600&display=swap');
 
-  :root {
-    --bg: #1a1e2e;
-    --surface: #1e2436;
-    --card: #2a2f4a;
-    --border: #2e3555;
-    --green: #00c8ff;
-    --red: #ff4466;
-    --yellow: #ffcc00;
-    --blue: #6ab0ff;
-    --text: #ffffff;
-    --muted: #8fa8cc;
-    --gold: #ffaa00;
-  }
+:root {
+–bg:      #0a0a0f;
+–panel:   #0f0f1a;
+–card:    #13131f;
+–border:  #1e1e35;
+–red:     #ff3355;
+–green:   #00ff88;
+–blue:    #0088ff;
+–gold:    #ffaa00;
+–purple:  #9944ff;
+–text:    #e8eeff;
+–muted:   #44446a;
+–long:    #00ff88;
+–short:   #ff3355;
+}
 
-  * { box-sizing: border-box; margin: 0; padding: 0; }
+- { box-sizing: border-box; margin: 0; padding: 0; }
 
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'DM Sans', sans-serif;
-    min-height: 100vh;
-  }
+body {
+background: var(–bg);
+color: var(–text);
+font-family: ‘Exo 2’, sans-serif;
+min-height: 100vh;
+overflow-x: hidden;
+}
 
-  body::after {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background: repeating-linear-gradient(
-      0deg,
-      transparent,
-      transparent 2px,
-      rgba(0,100,255,0.012) 2px,
-      rgba(0,100,255,0.012) 4px
-    );
-    pointer-events: none;
-    z-index: 999;
-  }
+/* Grid background */
+body::before {
+content: ‘’;
+position: fixed;
+inset: 0;
+background-image:
+linear-gradient(rgba(255,51,85,0.03) 1px, transparent 1px),
+linear-gradient(90deg, rgba(255,51,85,0.03) 1px, transparent 1px);
+background-size: 40px 40px;
+pointer-events: none;
+z-index: 0;
+}
 
-  .wrap {
-    max-width: 860px;
-    margin: 0 auto;
-    padding: 1.5rem 1.2rem 4rem;
-    padding-top: max(1.5rem, env(safe-area-inset-top));
-    padding-bottom: max(4rem, env(safe-area-inset-bottom));
-  }
+.wrap {
+position: relative;
+z-index: 1;
+max-width: 900px;
+margin: 0 auto;
+padding: 1.2rem 1rem 5rem;
+padding-top: max(1.2rem, env(safe-area-inset-top));
+}
 
-  #installBanner {
-    display: none;
-    background: rgba(0,255,136,0.07);
-    border: 1px solid rgba(0,255,136,0.2);
-    border-radius: 8px;
-    padding: 0.75rem 1rem;
-    margin-bottom: 1rem;
-    align-items: center;
-    gap: 0.8rem;
-  }
-  #installBanner.show { display: flex; }
-  #installBanner p { font-size: 0.72rem; color: var(--text); flex: 1; line-height: 1.4; font-family: 'IBM Plex Mono', monospace; }
-  #installBanner p span { color: var(--green); }
-  .install-btn { background: var(--green); color: #000; border: none; border-radius: 5px; font-family: 'IBM Plex Mono', monospace; font-size: 0.65rem; font-weight: 700; padding: 6px 12px; cursor: pointer; letter-spacing: 0.06em; white-space: nowrap; }
-  .dismiss-btn { background: transparent; border: none; color: var(--muted); cursor: pointer; font-size: 1rem; padding: 4px; }
+/* ── HEADER ── */
+.header {
+display: flex;
+align-items: flex-start;
+justify-content: space-between;
+margin-bottom: 1.5rem;
+padding-bottom: 1rem;
+border-bottom: 1px solid var(–border);
+}
 
-  .topbar {
-    display: flex;
-    align-items: center;
-    gap: 0.8rem;
-    margin-bottom: 2rem;
-    padding-bottom: 1rem;
-    border-bottom: 1px solid var(--border);
-  }
+.logo-block {}
 
-  .topbar-logo {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 2rem;
-    color: var(--green);
-    letter-spacing: 0.05em;
-    line-height: 1;
-    text-shadow: 0 0 20px rgba(0,200,255,0.5);
-  }
+.logo {
+font-family: ‘Orbitron’, monospace;
+font-size: 2.2rem;
+font-weight: 900;
+color: var(–red);
+letter-spacing: 0.08em;
+text-shadow: 0 0 30px rgba(255,51,85,0.6), 0 0 60px rgba(255,51,85,0.2);
+line-height: 1;
+}
 
-  .topbar-sub {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.6rem;
-    color: var(--muted);
-    letter-spacing: 0.12em;
-    line-height: 1.6;
-  }
+.logo-sub {
+font-family: ‘Share Tech Mono’, monospace;
+font-size: 0.58rem;
+color: var(–muted);
+letter-spacing: 0.18em;
+margin-top: 3px;
+}
 
-  .topbar-badge {
-    margin-left: auto;
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.6rem;
-    color: var(--green);
-    border: 1px solid rgba(0,255,136,0.3);
-    padding: 4px 10px;
-    border-radius: 3px;
-    background: rgba(0,255,136,0.05);
-    letter-spacing: 0.08em;
-  }
+.made-by {
+font-family: ‘Dancing Script’, ‘Palatino Linotype’, Georgia, cursive;
+font-style: italic;
+font-size: 0.95rem;
+color: var(–gold);
+margin-top: 2px;
+}
 
-  .coin-selector {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0.8rem;
-    margin-bottom: 1rem;
-  }
+.header-right {
+display: flex;
+flex-direction: column;
+align-items: flex-end;
+gap: 0.4rem;
+}
 
-  .input-group {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 0.9rem 1rem;
-  }
+.fias-badge {
+font-family: ‘Share Tech Mono’, monospace;
+font-size: 0.58rem;
+color: var(–purple);
+border: 1px solid rgba(153,68,255,0.4);
+padding: 4px 10px;
+border-radius: 3px;
+background: rgba(153,68,255,0.06);
+letter-spacing: 0.1em;
+}
 
-  .input-label {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.6rem;
-    color: var(--muted);
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    margin-bottom: 0.5rem;
-    display: block;
-  }
+.mexc-badge {
+font-family: ‘Share Tech Mono’, monospace;
+font-size: 0.55rem;
+color: var(–blue);
+border: 1px solid rgba(0,136,255,0.3);
+padding: 3px 8px;
+border-radius: 3px;
+background: rgba(0,136,255,0.05);
+letter-spacing: 0.08em;
+}
 
-  select, input[type="number"], input[type="password"], input[type="text"] {
-    width: 100%;
-    background: transparent;
-    border: none;
-    color: var(--text);
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 1rem;
-    font-weight: 600;
-    outline: none;
-    cursor: pointer;
-  }
+/* ── PRICE STRIP ── */
+.price-strip {
+display: flex;
+gap: 0.6rem;
+margin-bottom: 1rem;
+overflow-x: auto;
+padding-bottom: 4px;
+scrollbar-width: none;
+}
+.price-strip::-webkit-scrollbar { display: none; }
 
-  input[type="password"], input[type="text"] {
-    font-size: 0.8rem;
-    font-weight: 400;
-  }
+.price-chip {
+flex-shrink: 0;
+background: var(–card);
+border: 1px solid var(–border);
+border-radius: 6px;
+padding: 0.5rem 0.8rem;
+min-width: 90px;
+}
+.price-chip .pc-name {
+font-family: ‘Share Tech Mono’, monospace;
+font-size: 0.5rem;
+color: var(–muted);
+letter-spacing: 0.1em;
+text-transform: uppercase;
+}
+.price-chip .pc-val {
+font-family: ‘Orbitron’, monospace;
+font-size: 0.75rem;
+font-weight: 700;
+margin-top: 2px;
+}
+.price-chip .pc-chg {
+font-family: ‘Share Tech Mono’, monospace;
+font-size: 0.5rem;
+margin-top: 1px;
+}
 
-  select option { background: #242840; }
+/* ── API KEY ── */
+.api-block {
+background: var(–card);
+border: 1px solid var(–border);
+border-radius: 8px;
+padding: 0.9rem 1rem;
+margin-bottom: 1rem;
+}
+.field-label {
+font-family: ‘Share Tech Mono’, monospace;
+font-size: 0.55rem;
+color: var(–muted);
+letter-spacing: 0.12em;
+text-transform: uppercase;
+margin-bottom: 0.4rem;
+display: block;
+}
+.key-row { display: flex; gap: 0.5rem; align-items: center; }
+.key-row input {
+flex: 1; background: transparent; border: none;
+color: var(–text); font-family: ‘Share Tech Mono’, monospace;
+font-size: 0.8rem; outline: none;
+}
+.key-row input::placeholder { color: var(–muted); }
+.icon-btn {
+background: transparent; border: 1px solid var(–border);
+color: var(–muted); border-radius: 4px; padding: 4px 8px;
+cursor: pointer; font-size: 0.75rem;
+}
+.icon-btn:hover { border-color: var(–red); color: var(–red); }
+.key-hint {
+font-family: ‘Share Tech Mono’, monospace;
+font-size: 0.5rem; color: var(–muted);
+margin-top: 5px; display: block;
+}
+.key-hint a { color: var(–blue); }
 
-  .entity-row {
-    display: flex;
-    gap: 0.5rem;
-    margin-bottom: 1rem;
-    flex-wrap: wrap;
-  }
+/* ── INPUTS GRID ── */
+.inputs-grid {
+display: grid;
+grid-template-columns: 1fr 1fr;
+gap: 0.7rem;
+margin-bottom: 0.7rem;
+}
+.input-block {
+background: var(–card);
+border: 1px solid var(–border);
+border-radius: 8px;
+padding: 0.8rem 1rem;
+}
+.input-block select,
+.input-block input[type=“number”] {
+width: 100%; background: transparent; border: none;
+color: var(–text); font-family: ‘Exo 2’, sans-serif;
+font-size: 0.95rem; font-weight: 600; outline: none; cursor: pointer;
+}
+.input-block select option { background: #13131f; }
 
-  .entity-chip {
-    display: flex;
-    align-items: center;
-    gap: 0.35rem;
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.62rem;
-    padding: 5px 10px;
-    border-radius: 4px;
-    border: 1px solid var(--border);
-    color: var(--muted);
-    background: var(--card);
-    transition: all 0.25s;
-    letter-spacing: 0.04em;
-  }
+/* ── LEVERAGE SELECTOR ── */
+.lev-block {
+background: var(–card);
+border: 1px solid rgba(255,51,85,0.3);
+border-radius: 8px;
+padding: 0.8rem 1rem;
+margin-bottom: 1rem;
+display: flex;
+align-items: center;
+gap: 1rem;
+flex-wrap: wrap;
+}
+.lev-title {
+font-family: ‘Orbitron’, monospace;
+font-size: 0.65rem;
+color: var(–red);
+letter-spacing: 0.1em;
+flex-shrink: 0;
+}
+.lev-buttons {
+display: flex;
+gap: 0.4rem;
+flex-wrap: wrap;
+flex: 1;
+}
+.lev-btn {
+background: transparent;
+border: 1px solid var(–border);
+color: var(–muted);
+border-radius: 4px;
+padding: 5px 12px;
+font-family: ‘Orbitron’, monospace;
+font-size: 0.62rem;
+font-weight: 700;
+cursor: pointer;
+transition: all 0.15s;
+letter-spacing: 0.05em;
+}
+.lev-btn:hover { border-color: var(–red); color: var(–red); }
+.lev-btn.active {
+background: rgba(255,51,85,0.15);
+border-color: var(–red);
+color: var(–red);
+box-shadow: 0 0 10px rgba(255,51,85,0.3);
+}
 
-  .entity-chip .led {
-    width: 5px; height: 5px;
-    border-radius: 50%;
-    background: var(--muted);
-    transition: all 0.25s;
-  }
+/* ── ENTITIES ── */
+.entities-row {
+display: flex;
+gap: 0.4rem;
+margin-bottom: 1rem;
+flex-wrap: wrap;
+}
+.entity-chip {
+display: flex;
+align-items: center;
+gap: 0.35rem;
+font-family: ‘Share Tech Mono’, monospace;
+font-size: 0.58rem;
+padding: 5px 10px;
+border-radius: 4px;
+border: 1px solid var(–border);
+color: var(–muted);
+background: var(–card);
+transition: all 0.2s;
+letter-spacing: 0.04em;
+}
+.entity-chip .led {
+width: 5px; height: 5px;
+border-radius: 50%;
+background: var(–muted);
+transition: all 0.2s;
+flex-shrink: 0;
+}
+.entity-chip.running { border-color: var(–red); color: var(–red); background: rgba(255,51,85,0.06); }
+.entity-chip.running .led { background: var(–red); box-shadow: 0 0 6px var(–red); animation: pulse 0.7s infinite; }
+.entity-chip.done { border-color: rgba(0,255,136,0.4); color: rgba(0,255,136,0.7); }
+.entity-chip.done .led { background: rgba(0,255,136,0.5); }
 
-  .entity-chip.running {
-    border-color: var(--green);
-    color: var(--green);
-    background: rgba(0,255,136,0.06);
-  }
-  .entity-chip.running .led {
-    background: var(--green);
-    box-shadow: 0 0 6px var(--green);
-    animation: blink 0.8s infinite;
-  }
-  .entity-chip.done {
-    border-color: rgba(0,255,136,0.3);
-    color: rgba(0,255,136,0.6);
-  }
-  .entity-chip.done .led { background: rgba(0,255,136,0.4); }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.2} }
 
-  @keyframes blink {
-    0%,100% { opacity:1; } 50% { opacity:0.2; }
-  }
+/* ── BUTTONS ── */
+.main-btn {
+width: 100%;
+background: transparent;
+border: 1px solid var(–red);
+color: var(–red);
+font-family: ‘Orbitron’, monospace;
+font-size: 1.1rem;
+font-weight: 700;
+letter-spacing: 0.15em;
+padding: 0.85rem;
+border-radius: 6px;
+cursor: pointer;
+transition: all 0.2s;
+margin-bottom: 0.7rem;
+box-shadow: 0 0 20px rgba(255,51,85,0.1);
+}
+.main-btn:hover:not(:disabled) {
+background: rgba(255,51,85,0.08);
+box-shadow: 0 0 40px rgba(255,51,85,0.3);
+}
+.main-btn:disabled { opacity: 0.35; cursor: not-allowed; }
 
-  .analyze-btn {
-    width: 100%;
-    background: transparent;
-    border: 1px solid var(--green);
-    color: var(--green);
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 1.3rem;
-    letter-spacing: 0.15em;
-    padding: 0.75rem;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: all 0.2s;
-    margin-bottom: 1.5rem;
-    box-shadow: 0 0 20px rgba(0,200,255,0.1);
-  }
+.scan-btn {
+border-color: var(–gold);
+color: var(–gold);
+box-shadow: 0 0 20px rgba(255,170,0,0.08);
+}
+.scan-btn:hover:not(:disabled) {
+background: rgba(255,170,0,0.06);
+box-shadow: 0 0 40px rgba(255,170,0,0.25);
+}
 
-  .analyze-btn:hover:not(:disabled) {
-    background: rgba(0,255,136,0.08);
-    box-shadow: 0 0 30px rgba(0,200,255,0.25);
-  }
+/* ── DISCLAIMER ── */
+.disclaimer {
+font-family: ‘Share Tech Mono’, monospace;
+font-size: 0.52rem;
+color: var(–muted);
+text-align: center;
+padding: 0.6rem;
+border: 1px solid var(–border);
+border-radius: 6px;
+line-height: 1.7;
+margin-bottom: 1rem;
+}
 
-  .analyze-btn:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-  }
+/* ── SCAN RESULT ── */
+.scan-section { display: none; margin-bottom: 1rem; }
 
-  .results { display: none; flex-direction: column; gap: 0.8rem; }
-  .results.visible { display: flex; }
+/* ── RESULT CARDS ── */
+.results { display: none; flex-direction: column; gap: 0.8rem; }
+.results.visible { display: flex; }
 
-  .result-card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    overflow: hidden;
-    animation: fadeUp 0.35s ease both;
-  }
+.result-card {
+background: var(–card);
+border: 1px solid var(–border);
+border-radius: 8px;
+overflow: hidden;
+animation: slideUp 0.3s ease both;
+}
+@keyframes slideUp {
+from { opacity:0; transform: translateY(10px); }
+to   { opacity:1; transform: translateY(0); }
+}
 
-  @keyframes fadeUp {
-    from { opacity:0; transform: translateY(8px); }
-    to   { opacity:1; transform: translateY(0); }
-  }
+.card-head {
+display: flex;
+align-items: center;
+gap: 0.6rem;
+padding: 0.65rem 1rem;
+border-bottom: 1px solid var(–border);
+background: rgba(255,255,255,0.015);
+}
+.ctag {
+font-family: ‘Share Tech Mono’, monospace;
+font-size: 0.54rem;
+letter-spacing: 0.08em;
+padding: 3px 7px;
+border-radius: 3px;
+}
+.ctag-structure { background: rgba(0,136,255,0.1); color: var(–blue); border: 1px solid rgba(0,136,255,0.3); }
+.ctag-signal    { background: rgba(255,51,85,0.1);  color: var(–red);  border: 1px solid rgba(255,51,85,0.3); }
+.ctag-risk      { background: rgba(255,170,0,0.1);  color: var(–gold); border: 1px solid rgba(255,170,0,0.3); }
+.ctag-execute   { background: rgba(153,68,255,0.1); color: var(–purple); border: 1px solid rgba(153,68,255,0.3); }
 
-  .card-header {
-    display: flex;
-    align-items: center;
-    gap: 0.6rem;
-    padding: 0.7rem 1rem;
-    border-bottom: 1px solid var(--border);
-    background: rgba(255,255,255,0.015);
-  }
+.card-title { font-size: 0.8rem; font-weight: 600; flex: 1; }
 
-  .card-tag {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.58rem;
-    letter-spacing: 0.1em;
-    padding: 3px 7px;
-    border-radius: 3px;
-  }
+.fias-chip {
+font-family: ‘Share Tech Mono’, monospace;
+font-size: 0.54rem;
+color: var(–purple);
+background: rgba(153,68,255,0.08);
+border: 1px solid rgba(153,68,255,0.2);
+padding: 3px 7px;
+border-radius: 3px;
+}
 
-  .tag-trend  { background: rgba(0,170,255,0.12); color: var(--blue);   border: 1px solid rgba(0,170,255,0.3); }
-  .tag-signal { background: rgba(0,255,136,0.1);  color: var(--green);  border: 1px solid rgba(0,255,136,0.3); }
-  .tag-risk   { background: rgba(255,51,85,0.1);  color: var(--red);    border: 1px solid rgba(255,51,85,0.3); }
-  .tag-advice { background: rgba(255,204,0,0.1);  color: var(--yellow); border: 1px solid rgba(255,204,0,0.3); }
+.card-body {
+padding: 1rem;
+font-size: 0.78rem;
+line-height: 1.65;
+color: #111;
+background: #ffffff;
+min-height: 60px;
+white-space: normal;
+}
 
-  .card-title {
-    font-size: 0.82rem;
-    font-weight: 500;
-    flex: 1;
-  }
+/* Loading dots */
+.dots { display: inline-flex; gap: 5px; }
+.dots span {
+width: 5px; height: 5px;
+background: var(–red);
+border-radius: 50%;
+animation: pulse 1s infinite;
+}
+.dots span:nth-child(2) { animation-delay:.2s; }
+.dots span:nth-child(3) { animation-delay:.4s; }
 
-  .pay-chip {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.58rem;
-    color: var(--gold);
-    background: rgba(255,170,0,0.08);
-    border: 1px solid rgba(255,170,0,0.2);
-    padding: 3px 7px;
-    border-radius: 3px;
-  }
-
-  .card-body {
-    padding: 1rem;
-    font-size: 0.78rem;
-    line-height: 1.65;
-    color: #111111;
-    background: #ffffff;
-    font-family: 'DM Sans', sans-serif;
-    white-space: normal;
-    min-height: 60px;
-  }
-
-  .dots { display: inline-flex; gap: 5px; }
-  .dots span {
-    width: 5px; height: 5px;
-    background: var(--green);
-    border-radius: 50%;
-    animation: blink 1s infinite;
-  }
-  .dots span:nth-child(2) { animation-delay:.2s; }
-  .dots span:nth-child(3) { animation-delay:.4s; }
-
-  .disclaimer {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.58rem;
-    color: var(--muted);
-    text-align: center;
-    padding: 0.6rem;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    line-height: 1.6;
-  }
-
-  .pay-log {
-    background: var(--card);
-    border: 1px solid rgba(255,170,0,0.15);
-    border-radius: 8px;
-    padding: 0.9rem 1rem;
-    animation: fadeUp 0.35s ease both;
-  }
-
-  .pay-log-title {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.6rem;
-    color: var(--gold);
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    margin-bottom: 0.6rem;
-  }
-
-  .pay-row {
-    display: flex;
-    justify-content: space-between;
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.65rem;
-    padding: 4px 0;
-    border-bottom: 1px solid rgba(255,255,255,0.03);
-  }
-  .pay-row:last-child { border: none; }
-  .pay-row .name { color: var(--muted); }
-  .pay-row .amt  { color: var(--gold); }
-  .pay-row .ok   { color: var(--green); font-size: 0.55rem; }
-
-  .key-toggle {
-    background: transparent;
-    border: 1px solid var(--border);
-    color: var(--muted);
-    border-radius: 4px;
-    padding: 4px 8px;
-    cursor: pointer;
-    font-size: 0.75rem;
-    line-height: 1;
-    flex-shrink: 0;
-  }
-  .key-toggle:hover { border-color: var(--green); color: var(--green); }
+/* ── DIRECTION INDICATOR ── */
+.direction-bar {
+display: none;
+align-items: center;
+gap: 0.8rem;
+padding: 0.6rem 1rem;
+margin-bottom: 0.7rem;
+border-radius: 6px;
+font-family: ‘Orbitron’, monospace;
+font-size: 1rem;
+font-weight: 900;
+letter-spacing: 0.1em;
+border: 1px solid;
+}
+.direction-bar.long {
+background: rgba(0,255,136,0.08);
+border-color: rgba(0,255,136,0.4);
+color: var(–long);
+}
+.direction-bar.short {
+background: rgba(255,51,85,0.08);
+border-color: rgba(255,51,85,0.4);
+color: var(–short);
+}
+.direction-bar.visible { display: flex; }
 </style>
+
+<script>
+// Embedded PWA icons (Samsung Internet compatible)
+const ICON_192 = 'data:image/png;base64,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';
+const ICON_512 = 'data:image/png;base64,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';
+// Dynamic link injection for Samsung Internet
+(function() {
+  var l = document.createElement('link');
+  l.rel = 'apple-touch-icon';
+  l.href = ICON_192;
+  document.head.appendChild(l);
+  var l2 = document.createElement('link');
+  l2.rel = 'icon';
+  l2.type = 'image/png';
+  l2.href = ICON_192;
+  document.head.appendChild(l2);
+})();
+</script>
+
 </head>
 <body>
 <div class="wrap">
 
-  <!-- PWA Install Banner -->
-  <div id="installBanner">
-    <p>📲 <span>Installeer als app</span> — zet hem op je homescreen!</p>
-    <button class="install-btn" onclick="installPWA()">INSTALLEER</button>
-    <button class="dismiss-btn" onclick="dismissInstall()">✕</button>
-  </div>
-
   <!-- Header -->
-  <div class="topbar">
-    <div>
-      <div class="topbar-logo">SIGNAL</div>
-      <div style="font-family:'Dancing Script','Palatino Linotype',Georgia,cursive; font-style:italic; font-size:1.05rem; color:#ffaa00; margin-top:-2px; letter-spacing:0.02em;">Made by Rob Borghouts</div>
-      <div class="topbar-sub">FIAS ARCHE · CRYPTO TRADING SIGNALS<br>POWERED BY AI ENTITIES</div>
+
+  <div class="header">
+    <div class="logo-block">
+      <div class="logo">SIGNALS<span style="color:#ffaa00">LEV</span></div>
+      <div class="made-by">Made by Rob Borghouts</div>
+      <div class="logo-sub">FIAS ARCHE · LEVERAGE TRADING SYSTEEM · AI ENTITIES</div>
     </div>
-    <div class="topbar-badge">⬡ FIAS v0.1</div>
+    <div class="header-right">
+      <div class="fias-badge">⬡ FIAS v0.1</div>
+      <div class="mexc-badge">⚡ MEXC FUTURES</div>
+    </div>
   </div>
 
-  <!-- FIAS Ecosystem Strip -->
-  <div id="fiasStrip" style="
-    display:flex; align-items:center; gap:1.2rem;
-    background: rgba(153,102,255,0.07);
-    border: 1px solid rgba(153,102,255,0.18);
-    border-radius: 8px; padding: 0.6rem 1rem;
-    margin-bottom: 1rem; flex-wrap: wrap;
-  ">
-    <span style="font-family:'IBM Plex Mono',monospace; font-size:0.6rem; color:#9966ff; letter-spacing:0.1em;">⬡ FIAS ECOSYSTEM</span>
-    <div style="display:flex; gap:1.2rem; flex:1; flex-wrap:wrap;">
-      <div>
-        <div style="font-family:'IBM Plex Mono',monospace; font-size:0.55rem; color:var(--muted); letter-spacing:0.08em;">FIAS TOKEN</div>
-        <div style="font-family:'Bebas Neue',sans-serif; font-size:1rem; color:#9966ff;" id="s-fiasPrice">⬡ Platform</div>
-      </div>
-      <div>
-        <div style="font-family:'IBM Plex Mono',monospace; font-size:0.55rem; color:var(--muted); letter-spacing:0.08em;">DevvE TOKEN</div>
-        <div style="font-family:'Bebas Neue',sans-serif; font-size:1rem; color:var(--green);" id="s-devvePrice">laden...</div>
-        <div style="font-family:'IBM Plex Mono',monospace; font-size:0.55rem;" id="s-devveChange">—</div>
-      </div>
+  <!-- Live price strip -->
+
+  <div class="price-strip" id="priceStrip">
+    <div class="price-chip">
+      <div class="pc-name">BTC</div>
+      <div class="pc-val" id="p-btc" style="color:#ffaa00">—</div>
+      <div class="pc-chg" id="c-btc">—</div>
     </div>
-    <span style="font-family:'IBM Plex Mono',monospace; font-size:0.55rem; color:var(--muted); text-align:right; line-height:1.6;">
-      Payments via<br><span style="color:#9966ff">DevvX Blockchain</span>
-    </span>
+    <div class="price-chip">
+      <div class="pc-name">ETH</div>
+      <div class="pc-val" id="p-eth" style="color:#6ab0ff">—</div>
+      <div class="pc-chg" id="c-eth">—</div>
+    </div>
+    <div class="price-chip">
+      <div class="pc-name">SOL</div>
+      <div class="pc-val" id="p-sol" style="color:#9966ff">—</div>
+      <div class="pc-chg" id="c-sol">—</div>
+    </div>
+    <div class="price-chip">
+      <div class="pc-name">BNB</div>
+      <div class="pc-val" id="p-bnb" style="color:#ffcc00">—</div>
+      <div class="pc-chg" id="c-bnb">—</div>
+    </div>
+    <div class="price-chip">
+      <div class="pc-name">FIAS</div>
+      <div class="pc-val" id="p-fias" style="color:#9944ff">—</div>
+      <div class="pc-chg" id="c-fias">—</div>
+    </div>
   </div>
 
   <!-- API Key -->
-  <div class="input-group" style="margin-bottom:1rem">
-    <span class="input-label">Anthropic API Key</span>
-    <div style="display:flex;gap:0.5rem;align-items:center">
+
+  <div class="api-block">
+    <span class="field-label">Anthropic API Key</span>
+    <div class="key-row">
       <input type="password" id="apiKey" placeholder="sk-ant-..."
-        oninput="localStorage.setItem('signals_apikey',this.value)">
-      <button class="key-toggle" onclick="toggleKey()">👁</button>
+        oninput="localStorage.setItem('signalslev_apikey', this.value)">
+      <button class="icon-btn" onclick="toggleKey()">👁</button>
     </div>
-    <span style="font-family:'IBM Plex Mono',monospace;font-size:0.55rem;color:var(--muted);margin-top:6px;display:block">
-      Haal je key op via <a href="https://console.anthropic.com" target="_blank" style="color:var(--green)">console.anthropic.com</a> · Wordt lokaal opgeslagen op jouw apparaat
+    <span class="key-hint">
+      Via <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a> · Lokaal opgeslagen
     </span>
   </div>
 
   <!-- Inputs -->
-  <div class="coin-selector">
-    <div class="input-group">
-      <span class="input-label">Coin</span>
-      <select id="coinSelect">
-      </select>
+
+  <div class="inputs-grid">
+    <div class="input-block">
+      <span class="field-label">Coin (MEXC Futures)</span>
+      <select id="coinSelect"></select>
     </div>
-    <div class="input-group">
-      <span class="input-label">Tijdframe</span>
+    <div class="input-block">
+      <span class="field-label">Tijdframe</span>
       <select id="timeframe">
-        <option value="scalp (15min-4uur)">Scalp (15m-4u)</option>
-        <option value="korte termijn (1-7 dagen)">Korte termijn (1-7d)</option>
-        <option value="middellange termijn (1-4 weken)">Middellange (1-4w)</option>
-        <option value="lange termijn (1-6 maanden)">Lange termijn (1-6m)</option>
+        <option value="scalp (1m-15m)">Scalp (1m-15m)</option>
+        <option value="intraday (15m-4u)">Intraday (15m-4u)</option>
+        <option value="swing (1-7 dagen)" selected>Swing (1-7d)</option>
+        <option value="positie (1-4 weken)">Positie (1-4w)</option>
       </select>
     </div>
-    <div class="input-group">
-      <span class="input-label">Risicoprofiel</span>
+    <div class="input-block">
+      <span class="field-label">Risicoprofiel</span>
       <select id="riskProfile">
-        <option value="conservatief (laag risico)">Conservatief</option>
-        <option value="gematigd">Gematigd</option>
-        <option value="agressief (hoog risico)">Agressief</option>
+        <option value="conservatief">Conservatief</option>
+        <option value="gematigd" selected>Gematigd</option>
+        <option value="agressief">Agressief</option>
       </select>
     </div>
-    <div class="input-group">
-      <span class="input-label">Investering ($)</span>
-      <input type="number" id="amount" value="500" min="1" />
+    <div class="input-block">
+      <span class="field-label">Kapitaal ($)</span>
+      <input type="number" id="amount" value="500" min="1">
     </div>
   </div>
 
-  <!-- Leverage toggle -->
-  <div style="display:flex;gap:0.5rem;margin-bottom:1rem;align-items:stretch">
-    <div class="input-group" style="flex:1;margin-bottom:0;display:flex;align-items:center;gap:0.8rem;cursor:pointer" onclick="toggleLeverage()">
-      <div id="leverageDot" style="width:14px;height:14px;border-radius:50%;background:var(--muted);border:2px solid var(--border);transition:all 0.2s;flex-shrink:0"></div>
-      <div>
-        <div style="font-family:'IBM Plex Mono',monospace;font-size:0.6rem;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase">Modus</div>
-        <div id="leverageLabel" style="font-family:'IBM Plex Mono',monospace;font-size:0.85rem;font-weight:600;color:var(--text)">Spot Trading</div>
-      </div>
+  <!-- Leverage selector -->
+
+  <div class="lev-block">
+    <div class="lev-title">⚡ HEFBOOM</div>
+    <div class="lev-buttons">
+      <button class="lev-btn" onclick="setLev(this,2)">2x</button>
+      <button class="lev-btn active" onclick="setLev(this,3)">3x</button>
+      <button class="lev-btn" onclick="setLev(this,5)">5x</button>
+      <button class="lev-btn" onclick="setLev(this,10)">10x</button>
+      <button class="lev-btn" onclick="setLev(this,20)">20x</button>
+      <button class="lev-btn" onclick="setLev(this,50)">50x</button>
     </div>
-    <div class="input-group" id="leverageGroup" style="flex:1;margin-bottom:0;display:none">
-      <span class="input-label">Max Hefboom</span>
-      <select id="maxLeverage">
-        <option value="3">Max 3x</option>
-        <option value="5">Max 5x</option>
-        <option value="10">Max 10x</option>
-        <option value="20">Max 20x</option>
-        <option value="50">Max 50x</option>
-      </select>
-    </div>
+  </div>
+
+  <!-- Direction indicator -->
+
+  <div class="direction-bar" id="directionBar">
+    <span id="directionIcon">⚡</span>
+    <span id="directionText">—</span>
   </div>
 
   <!-- Entity chips -->
-  <div class="entity-row">
-    <div class="entity-chip" id="chip-trend"><span class="led"></span>TREND ANALYZER</div>
-    <div class="entity-chip" id="chip-signal"><span class="led"></span>SIGNAL GENERATOR</div>
-    <div class="entity-chip" id="chip-risk"><span class="led"></span>RISK ASSESSOR</div>
-    <div class="entity-chip" id="chip-advice"><span class="led"></span>TRADE ADVISOR</div>
+
+  <div class="entities-row">
+    <div class="entity-chip" id="chip-structure"><span class="led"></span>MARKET STRUCTURE</div>
+    <div class="entity-chip" id="chip-signal"><span class="led"></span>LEVERAGE SIGNAL</div>
+    <div class="entity-chip" id="chip-risk"><span class="led"></span>RISK CALCULATOR</div>
+    <div class="entity-chip" id="chip-execute"><span class="led"></span>MEXC EXECUTOR</div>
   </div>
 
-  <button class="analyze-btn" id="analyzeBtn" onclick="runAnalysis()">
-    ⬡ GENEREER TRADING SIGNAAL
-  </button>
+  <!-- Main buttons -->
 
-  <!-- SCAN knop -->
-  <button class="analyze-btn" id="scanBtn" onclick="runScan()" style="border-color:var(--gold);color:var(--gold);box-shadow:0 0 20px rgba(255,170,0,0.1);margin-bottom:0.5rem">
-    🔍 SCAN ALLE COINS OP KANSEN
+  <button class="main-btn" id="analyzeBtn" onclick="runAnalysis()">
+    ⚡ GENEREER LEVERAGE SIGNAAL
+  </button>
+  <button class="main-btn scan-btn" id="scanBtn" onclick="runScan()">
+    🔍 SCAN MEXC OP LEVERAGE KANSEN
   </button>
 
   <!-- Disclaimer -->
-  <div class="disclaimer" style="margin-bottom:1rem">
-    ⚠️ UITSLUITEND VOOR EDUCATIEVE DOELEINDEN · GEEN FINANCIEEL ADVIES · CRYPTO TRADING BRENGT RISICO'S MET ZICH MEE
+
+  <div class="disclaimer">
+    ⚠️ UITSLUITEND VOOR EDUCATIEVE DOELEINDEN · GEEN FINANCIEEL ADVIES
+    LEVERAGE TRADING BRENGT EXTREEM HOOG RISICO MET ZICH MEE · U KUNT MEER VERLIEZEN DAN UW INLEG
   </div>
 
-  <!-- SCAN Results -->
-  <div id="scanResults" style="display:none;margin-bottom:1rem">
-    <div style="
-      background:var(--card);border:1px solid rgba(255,170,0,0.3);
-      border-radius:8px;overflow:hidden;animation:fadeUp 0.35s ease both
-    ">
-      <div style="
-        display:flex;align-items:center;gap:0.6rem;
-        padding:0.7rem 1rem;border-bottom:1px solid var(--border);
-        background:rgba(255,170,0,0.05)
-      ">
-        <span style="font-family:'IBM Plex Mono',monospace;font-size:0.58rem;
-          letter-spacing:0.1em;padding:3px 7px;border-radius:3px;
-          background:rgba(255,170,0,0.1);color:var(--gold);
-          border:1px solid rgba(255,170,0,0.3)">🔍 MARKET SCANNER</span>
-        <span style="font-size:0.82rem;font-weight:500;flex:1">Top Handelskansen</span>
-        <span id="scanTime" style="font-family:'IBM Plex Mono',monospace;font-size:0.55rem;color:var(--muted)"></span>
+  <!-- Scan result -->
+
+  <div class="scan-section" id="scanSection">
+    <div class="result-card">
+      <div class="card-head">
+        <span class="ctag ctag-signal">🔍 MEXC MARKET SCANNER</span>
+        <span class="card-title">Top Leverage Kansen</span>
+        <span id="scanTime" style="font-family:'Share Tech Mono',monospace;font-size:0.52rem;color:var(--muted)"></span>
       </div>
-      <div id="scanBody" style="
-        padding:1rem;font-size:0.78rem;line-height:1.65;
-        color:#111111;background:#ffffff;min-height:60px
-      ">
+      <div class="card-body" id="scanBody">
         <div class="dots"><span></span><span></span><span></span></div>
       </div>
     </div>
   </div>
 
-  <!-- Results -->
+  <!-- Analysis results -->
+
   <div class="results" id="results">
 
-    <div class="result-card" style="animation-delay:0s">
-      <div class="card-header">
-        <span class="card-tag tag-trend">ENTITY · TREND ANALYZER</span>
-        <span class="card-title">Markttrend Analyse</span>
-        <span class="pay-chip">⬡ 0.0014 FIAS</span>
-      </div>
-      <div class="card-body" id="body-trend"><div class="dots"><span></span><span></span><span></span></div></div>
-    </div>
+```
+<div class="result-card" style="animation-delay:0s">
+  <div class="card-head">
+    <span class="ctag ctag-structure">ENTITY 01 · MARKET STRUCTURE</span>
+    <span class="card-title">Marktstructuur Analyse</span>
+    <span class="fias-chip">⬡ 0.0012 FIAS</span>
+  </div>
+  <div class="card-body" id="body-structure">
+    <div class="dots"><span></span><span></span><span></span></div>
+  </div>
+</div>
 
-    <div class="result-card" style="animation-delay:0.1s">
-      <div class="card-header">
-        <span class="card-tag tag-signal">ENTITY · SIGNAL GENERATOR</span>
-        <span class="card-title">Trading Signaal</span>
-        <span class="pay-chip">⬡ 0.0022 FIAS</span>
-      </div>
-      <div class="card-body" id="body-signal"><div class="dots"><span></span><span></span><span></span></div></div>
-    </div>
+<div class="result-card" style="animation-delay:0.1s">
+  <div class="card-head">
+    <span class="ctag ctag-signal">ENTITY 02 · LEVERAGE SIGNAL</span>
+    <span class="card-title">LONG / SHORT Signaal</span>
+    <span class="fias-chip">⬡ 0.0025 FIAS</span>
+  </div>
+  <div class="card-body" id="body-signal">
+    <div class="dots"><span></span><span></span><span></span></div>
+  </div>
+</div>
 
-    <div class="result-card" style="animation-delay:0.2s">
-      <div class="card-header">
-        <span class="card-tag tag-risk">ENTITY · RISK ASSESSOR</span>
-        <span class="card-title">Risicobeoordeling</span>
-        <span class="pay-chip">⬡ 0.0016 FIAS</span>
-      </div>
-      <div class="card-body" id="body-risk"><div class="dots"><span></span><span></span><span></span></div></div>
-    </div>
+<div class="result-card" style="animation-delay:0.2s">
+  <div class="card-head">
+    <span class="ctag ctag-risk">ENTITY 03 · RISK CALCULATOR</span>
+    <span class="card-title">Risico & Liquidatie</span>
+    <span class="fias-chip">⬡ 0.0018 FIAS</span>
+  </div>
+  <div class="card-body" id="body-risk">
+    <div class="dots"><span></span><span></span><span></span></div>
+  </div>
+</div>
 
-    <div class="result-card" style="animation-delay:0.3s">
-      <div class="card-header">
-        <span class="card-tag tag-advice">ENTITY · TRADE ADVISOR</span>
-        <span class="card-title">Concreet Advies</span>
-        <span class="pay-chip">⬡ 0.0019 FIAS</span>
-      </div>
-      <div class="card-body" id="body-advice"><div class="dots"><span></span><span></span><span></span></div></div>
-    </div>
-
-    <div class="pay-log" id="payLog" style="display:none">
-      <div class="pay-log-title">⬡ DevvX Blockchain · Micropayments Settled</div>
-      <div class="pay-row"><span class="name">Trend Analyzer Entity</span><span class="amt">0.0014 FIAS</span><span class="ok">✓ SETTLED</span></div>
-      <div class="pay-row"><span class="name">Signal Generator Entity</span><span class="amt">0.0022 FIAS</span><span class="ok">✓ SETTLED</span></div>
-      <div class="pay-row"><span class="name">Risk Assessor Entity</span><span class="amt">0.0016 FIAS</span><span class="ok">✓ SETTLED</span></div>
-      <div class="pay-row"><span class="name">Trade Advisor Entity</span><span class="amt">0.0019 FIAS</span><span class="ok">✓ SETTLED</span></div>
-      <div class="pay-row" style="border-top:1px solid rgba(255,170,0,0.15); margin-top:4px; padding-top:6px">
-        <span class="name" style="color:var(--text); font-weight:600">Totaal</span>
-        <span class="amt" style="font-size:0.75rem">0.0071 FIAS</span>
-        <span class="ok">✓ COMPLEET</span>
-      </div>
-    </div>
+<div class="result-card" style="animation-delay:0.3s">
+  <div class="card-head">
+    <span class="ctag ctag-execute">ENTITY 04 · MEXC EXECUTOR</span>
+    <span class="card-title">MEXC Uitvoering</span>
+    <span class="fias-chip">⬡ 0.0021 FIAS</span>
+  </div>
+  <div class="card-body" id="body-execute">
+    <div class="dots"><span></span><span></span><span></span></div>
+  </div>
+</div>
+```
 
   </div>
 </div>
 
 <script>
-// ─── COIN LIJSTEN ─────────────────────────────────────────────
-const SPOT_COINS = [
-  'Bitcoin (BTC)','Ethereum (ETH)','Solana (SOL)','BNB (BNB)',
-  'XRP (XRP)','Dogecoin (DOGE)','Toncoin (TON)','Chainlink (LINK)',
-  'Polkadot (DOT)','Uniswap (UNI)','Litecoin (LTC)','Polygon (MATIC)',
-  'Pepe (PEPE)','Shiba Inu (SHIB)','Sui (SUI)','Cardano (ADA)',
-  'Avalanche (AVAX)','FIAS (FIAS)','DevvE (DevvE)'
-];
-
-// Coins beschikbaar op MEXC Futures
-const MEXC_FUTURES_COINS = [
+// ─── MEXC FUTURES COINS ───────────────────────────────────────
+const MEXC_COINS = [
   'Bitcoin (BTC)','Ethereum (ETH)','Solana (SOL)','BNB (BNB)',
   'XRP (XRP)','Dogecoin (DOGE)','Cardano (ADA)','Avalanche (AVAX)',
   'Chainlink (LINK)','Polkadot (DOT)','Litecoin (LTC)','Polygon (MATIC)',
   'Pepe (PEPE)','Shiba Inu (SHIB)','Sui (SUI)','Toncoin (TON)',
   'Uniswap (UNI)','Aptos (APT)','Near Protocol (NEAR)','Injective (INJ)',
   'Arbitrum (ARB)','Optimism (OP)','Sei (SEI)','Render (RNDR)',
-  'Fetch.ai (FET)','Celestia (TIA)','Pyth Network (PYTH)','Jupiter (JUP)',
+  'Fetch.ai (FET)','Celestia (TIA)','Jupiter (JUP)',
   'Bonk (BONK)','WIF (WIF)','Notcoin (NOT)','Floki (FLOKI)'
 ];
 
-function updateCoinDropdown() {
-  const sel   = document.getElementById('coinSelect');
-  const coins = leverageMode ? MEXC_FUTURES_COINS : SPOT_COINS;
-  const cur   = sel.value;
-  sel.innerHTML = coins.map(c =>
-    `<option value="${c}"${c === cur ? ' selected' : ''}>${leverageMode && ['FIAS (FIAS)','DevvE (DevvE)'].includes(c) ? '⬡ ' : ''}${c}</option>`
-  ).join('');
-}
-let leverageMode = false;
-function toggleLeverage() {
-  leverageMode = !leverageMode;
-  document.getElementById('leverageDot').style.background   = leverageMode ? '#ff4466' : 'var(--muted)';
-  document.getElementById('leverageDot').style.borderColor  = leverageMode ? '#ff4466' : 'var(--border)';
-  document.getElementById('leverageDot').style.boxShadow    = leverageMode ? '0 0 8px #ff4466' : 'none';
-  document.getElementById('leverageLabel').textContent      = leverageMode ? '⚡ Leverage (MEXC)' : 'Spot Trading';
-  document.getElementById('leverageLabel').style.color      = leverageMode ? '#ff4466' : 'var(--text)';
-  document.getElementById('leverageGroup').style.display    = leverageMode ? 'block' : 'none';
-  updateCoinDropdown();
-}
-window.addEventListener('DOMContentLoaded', () => {
-  const saved = localStorage.getItem('signals_apikey');
-  if (saved) document.getElementById('apiKey').value = saved;
-  updateCoinDropdown();
-});
-// Fallback: als DOMContentLoaded al gevuurd is (script staat onderaan)
-if (document.readyState !== 'loading') {
-  const saved = localStorage.getItem('signals_apikey');
-  if (saved) document.getElementById('apiKey').value = saved;
-  updateCoinDropdown();
+const COIN_IDS = {
+  'Bitcoin (BTC)':        'bitcoin',
+  'Ethereum (ETH)':       'ethereum',
+  'Solana (SOL)':         'solana',
+  'BNB (BNB)':            'binancecoin',
+  'XRP (XRP)':            'ripple',
+  'Dogecoin (DOGE)':      'dogecoin',
+  'Cardano (ADA)':        'cardano',
+  'Avalanche (AVAX)':     'avalanche-2',
+  'Chainlink (LINK)':     'chainlink',
+  'Polkadot (DOT)':       'polkadot',
+  'Litecoin (LTC)':       'litecoin',
+  'Polygon (MATIC)':      'matic-network',
+  'Pepe (PEPE)':          'pepe',
+  'Shiba Inu (SHIB)':     'shiba-inu',
+  'Sui (SUI)':            'sui',
+  'Toncoin (TON)':        'the-open-network',
+  'Uniswap (UNI)':        'uniswap',
+  'Aptos (APT)':          'aptos',
+  'Near Protocol (NEAR)': 'near',
+  'Injective (INJ)':      'injective-protocol',
+  'Arbitrum (ARB)':       'arbitrum',
+  'Optimism (OP)':        'optimism',
+  'Sei (SEI)':            'sei-network',
+  'Render (RNDR)':        'render-token',
+  'Fetch.ai (FET)':       'fetch-ai',
+  'Celestia (TIA)':       'celestia',
+  'Jupiter (JUP)':        'jupiter-exchange-solana',
+  'Bonk (BONK)':          'bonk',
+  'WIF (WIF)':            'dogwifcoin',
+  'Notcoin (NOT)':        'notcoin',
+  'Floki (FLOKI)':        'floki'
+};
+
+// ─── LEVERAGE STATE ───────────────────────────────────────────
+let selectedLev = 3;
+function setLev(btn, val) {
+  selectedLev = val;
+  document.querySelectorAll('.lev-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
 }
 
+// ─── HELPERS ─────────────────────────────────────────────────
 function toggleKey() {
   const f = document.getElementById('apiKey');
   f.type = f.type === 'password' ? 'text' : 'password';
-}
-
-// ─── CLAUDE API ───────────────────────────────────────────────
-async function callClaude(system, user) {
-  const apiKey = document.getElementById('apiKey').value.trim();
-  if (!apiKey) {
-    throw new Error('Geen API key ingevuld');
-  }
-
-  const r = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": apiKey,
-      "anthropic-version": "2023-06-01",
-      "anthropic-dangerous-direct-browser-access": "true"
-    },
-    body: JSON.stringify({
-      model: "claude-haiku-4-5",
-      max_tokens: 1000,
-      system: system,
-      messages: [{ role: "user", content: user }]
-    })
-  });
-
-  if (!r.ok) {
-    const err = await r.json().catch(() => ({}));
-    throw new Error(`Server fout: ${r.status}${err?.error?.message ? ' – ' + err.error.message : ''}`);
-  }
-
-  const d = await r.json();
-  return d.content?.[0]?.text || "Geen resultaat.";
 }
 
 function setChip(id, state) {
@@ -670,7 +743,14 @@ function setChip(id, state) {
 }
 
 function loading(id) {
-  document.getElementById('body-' + id).innerHTML = '<div class="dots"><span></span><span></span><span></span></div>';
+  document.getElementById('body-' + id).innerHTML =
+    '<div class="dots"><span></span><span></span><span></span></div>';
+}
+
+function showError(id, msg) {
+  document.getElementById('body-' + id).innerHTML =
+    `<span style="color:#ff3355">❌ ${msg}</span>`;
+  setChip(id, '');
 }
 
 function renderMd(text) {
@@ -678,439 +758,329 @@ function renderMd(text) {
     .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
     .replace(/^#{1,3}\s+(.+)$/gm, '<strong style="color:#1a2a6c">$1</strong>')
     .replace(/\*\*(.+?)\*\*/g, '<strong style="color:#1a2a6c">$1</strong>')
-    .replace(/^---+$/gm, '<hr style="border:none;border-top:1px solid var(--border);margin:4px 0">')
+    .replace(/^---+$/gm, '<hr style="border:none;border-top:1px solid #ddd;margin:5px 0">')
     .replace(/\n\n+/g, '<br>')
     .replace(/\n/g, ' ');
 }
 
-function showError(id, msg) {
-  const el = document.getElementById('body-' + id);
-  el.innerHTML = '<span style="color:var(--red)">❌ ' + msg + '</span>';
-  setChip(id.replace('body-',''), '');
-}
-
-// ─── PWA ──────────────────────────────────────────────────────
-let deferredPrompt = null;
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(console.error));
-}
-window.addEventListener('beforeinstallprompt', e => {
-  e.preventDefault();
-  deferredPrompt = e;
-  if (!localStorage.getItem('signals_pwa_dismissed')) {
-    document.getElementById('installBanner').classList.add('show');
-  }
-});
-async function installPWA() {
-  if (!deferredPrompt) return;
-  deferredPrompt.prompt();
-  await deferredPrompt.userChoice;
-  deferredPrompt = null;
-  document.getElementById('installBanner').classList.remove('show');
-}
-function dismissInstall() {
-  document.getElementById('installBanner').classList.remove('show');
-  localStorage.setItem('signals_pwa_dismissed', '1');
-}
-window.addEventListener('appinstalled', () => document.getElementById('installBanner').classList.remove('show'));
-
-// ─── FIAS ECOSYSTEM PRICES ────────────────────────────────────
-async function fetchWithTimeout(url, ms = 6000) {
+// ─── FETCH WITH TIMEOUT ───────────────────────────────────────
+async function fetchT(url, ms = 6000) {
   const ctrl = new AbortController();
   const id = setTimeout(() => ctrl.abort(), ms);
   try {
-    const res = await fetch(url, { signal: ctrl.signal });
-    clearTimeout(id);
-    return res;
+    const r = await fetch(url, { signal: ctrl.signal });
+    clearTimeout(id); return r;
   } catch(e) { clearTimeout(id); throw e; }
 }
 
-async function loadFiasEcosystem() {
-  // DevvE via CoinGecko markets endpoint (betrouwbaarder)
-  try {
-    const res = await fetchWithTimeout('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=devve&price_change_percentage=24h');
-    const data = await res.json();
-    const coin = data?.[0];
-    if (coin) {
-      const p  = coin.current_price;
-      const ch = coin.price_change_percentage_24h;
-      document.getElementById('s-devvePrice').textContent = p < 0.01 ? '$' + p.toFixed(6) : '$' + p.toFixed(4);
-      const chEl = document.getElementById('s-devveChange');
-      chEl.textContent = (ch >= 0 ? '▲ +' : '▼ ') + ch.toFixed(2) + '%';
-      chEl.style.color = ch >= 0 ? 'var(--green)' : 'var(--red)';
-    } else {
-      document.getElementById('s-devvePrice').textContent = 'n/a';
-      document.getElementById('s-devveChange').textContent = '—';
-    }
-  } catch(e) {
-    document.getElementById('s-devvePrice').textContent = 'n/a';
-    document.getElementById('s-devveChange').textContent = '—';
+// ─── CLAUDE API ───────────────────────────────────────────────
+async function callClaude(system, user, maxTokens = 1200) {
+  const apiKey = document.getElementById('apiKey').value.trim();
+  if (!apiKey) throw new Error('Geen API key ingevuld');
+
+  const r = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true'
+    },
+    body: JSON.stringify({
+      model: 'claude-haiku-4-5',
+      max_tokens: maxTokens,
+      system,
+      messages: [{ role: 'user', content: user }]
+    })
+  });
+
+  if (!r.ok) {
+    const e = await r.json().catch(() => ({}));
+    throw new Error(`API fout: ${r.status}${e?.error?.message ? ' – ' + e.error.message : ''}`);
   }
+  const d = await r.json();
+  return d.content?.[0]?.text || 'Geen resultaat.';
+}
+
+// ─── LIVE PRICES ─────────────────────────────────────────────
+async function fetchPrice(coin) {
+  const id = COIN_IDS[coin];
+  if (!id) return null;
+  try {
+    const r = await fetchT(`https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${id}&price_change_percentage=24h`);
+    const d = await r.json();
+    return d?.[0] || null;
+  } catch(e) { return null; }
+}
+
+async function loadPriceStrip() {
+  const strip = [
+    { id: 'btc', cg: 'bitcoin' },
+    { id: 'eth', cg: 'ethereum' },
+    { id: 'sol', cg: 'solana' },
+    { id: 'bnb', cg: 'binancecoin' }
+  ];
+  try {
+    const ids = strip.map(s => s.cg).join(',');
+    const r = await fetchT(`https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${ids}&price_change_percentage=24h`);
+    const data = await r.json();
+    data.forEach(c => {
+      const key = strip.find(s => s.cg === c.id)?.id;
+      if (!key) return;
+      const p = c.current_price;
+      const ch = c.price_change_percentage_24h;
+      document.getElementById('p-' + key).textContent =
+        p > 1000 ? '$' + (p/1000).toFixed(1) + 'k' :
+        p < 0.01 ? '$' + p.toFixed(6) : '$' + p.toFixed(2);
+      const cel = document.getElementById('c-' + key);
+      cel.textContent = (ch >= 0 ? '▲ +' : '▼ ') + ch.toFixed(2) + '%';
+      cel.style.color = ch >= 0 ? '#00ff88' : '#ff3355';
+    });
+  } catch(e) {}
 
   // FIAS via DexScreener
   try {
-    const res = await fetchWithTimeout('https://api.dexscreener.com/latest/dex/tokens/0x21e88f4482cd48deab1ca5eddabdfb14cb8ad76f');
-    const data = await res.json();
-    const pair = data.pairs?.[0];
+    const r = await fetchT('https://api.dexscreener.com/latest/dex/tokens/0x21e88f4482cd48deab1ca5eddabdfb14cb8ad76f');
+    const d = await r.json();
+    const pair = d.pairs?.[0];
     if (pair) {
-      const p  = parseFloat(pair.priceUsd);
+      const p = parseFloat(pair.priceUsd);
       const ch = parseFloat(pair.priceChange?.h24 || 0);
-      const fiasEl = document.getElementById('s-fiasPrice');
-      fiasEl.textContent = '⬡ $' + (p < 0.01 ? p.toFixed(6) : p.toFixed(4));
-      fiasEl.style.color = '#9966ff';
-      let chEl = document.getElementById('s-fiasChange');
-      if (!chEl) {
-        chEl = document.createElement('div');
-        chEl.id = 's-fiasChange';
-        chEl.style.fontFamily = "'IBM Plex Mono', monospace";
-        chEl.style.fontSize = '0.55rem';
-        fiasEl.parentNode.appendChild(chEl);
-      }
-      chEl.textContent = (ch >= 0 ? '▲ +' : '▼ ') + ch.toFixed(2) + '%';
-      chEl.style.color = ch >= 0 ? 'var(--green)' : 'var(--red)';
-    } else {
-      document.getElementById('s-fiasPrice').textContent = '⬡ n/a';
+      document.getElementById('p-fias').textContent = '$' + p.toFixed(6);
+      const cel = document.getElementById('c-fias');
+      cel.textContent = (ch >= 0 ? '▲ +' : '▼ ') + ch.toFixed(2) + '%';
+      cel.style.color = ch >= 0 ? '#00ff88' : '#ff3355';
     }
-  } catch(e) {
-    document.getElementById('s-fiasPrice').textContent = '⬡ n/a';
-  }
-}
-// ─── COIN ID MAP (CoinGecko) ──────────────────────────────────
-const COIN_IDS = {
-  'Bitcoin (BTC)':          'bitcoin',
-  'Ethereum (ETH)':         'ethereum',
-  'Solana (SOL)':           'solana',
-  'BNB (BNB)':              'binancecoin',
-  'XRP (XRP)':              'ripple',
-  'Dogecoin (DOGE)':        'dogecoin',
-  'Toncoin (TON)':          'the-open-network',
-  'Chainlink (LINK)':       'chainlink',
-  'Polkadot (DOT)':         'polkadot',
-  'Uniswap (UNI)':          'uniswap',
-  'Litecoin (LTC)':         'litecoin',
-  'Polygon (MATIC)':        'matic-network',
-  'Pepe (PEPE)':            'pepe',
-  'Shiba Inu (SHIB)':       'shiba-inu',
-  'Sui (SUI)':              'sui',
-  'Cardano (ADA)':          'cardano',
-  'Avalanche (AVAX)':       'avalanche-2',
-  'Aptos (APT)':            'aptos',
-  'Near Protocol (NEAR)':   'near',
-  'Injective (INJ)':        'injective-protocol',
-  'Arbitrum (ARB)':         'arbitrum',
-  'Optimism (OP)':          'optimism',
-  'Sei (SEI)':              'sei-network',
-  'Render (RNDR)':          'render-token',
-  'Fetch.ai (FET)':         'fetch-ai',
-  'Celestia (TIA)':         'celestia',
-  'Pyth Network (PYTH)':    'pyth-network',
-  'Jupiter (JUP)':          'jupiter-exchange-solana',
-  'Bonk (BONK)':            'bonk',
-  'WIF (WIF)':              'dogwifcoin',
-  'Notcoin (NOT)':          'notcoin',
-  'Floki (FLOKI)':          'floki',
-  'FIAS (FIAS)':            'dexscreener:0x21e88f4482cd48deab1ca5eddabdfb14cb8ad76f',
-  'DevvE (DevvE)':          'devve'
-};
-
-async function fetchLivePrice(coin) {
-  const id = COIN_IDS[coin];
-  if (!id) return null;
-
-  // DexScreener voor FIAS
-  if (id.startsWith('dexscreener:')) {
-    const contract = id.split(':')[1];
-    try {
-      const res = await fetchWithTimeout(`https://api.dexscreener.com/latest/dex/tokens/${contract}`);
-      const data = await res.json();
-      const pair = data.pairs?.[0];
-      if (pair) return {
-        usd: parseFloat(pair.priceUsd),
-        usd_24h_change: parseFloat(pair.priceChange?.h24 || 0),
-        usd_24h_vol: parseFloat(pair.volume?.h24 || 0),
-        usd_market_cap: parseFloat(pair.fdv || 0)
-      };
-    } catch(e) {}
-    return null;
-  }
-
-  // CoinGecko voor de rest
-  try {
-    const res = await fetchWithTimeout(`https://api.coingecko.com/api/v3/simple/price?ids=${id}&vs_currencies=usd&include_24hr_change=true&include_24hr_vol=true&include_market_cap=true`);
-    const data = await res.json();
-    if (data[id]) return data[id];
   } catch(e) {}
-  return null;
 }
 
-// ─── MARKET SCANNER ──────────────────────────────────────────
-async function fetchTrendingDex() {
-  try {
-    // DexScreener trending tokens
-    const res = await fetch('https://api.dexscreener.com/token-boosts/top/v1');
-    const data = await res.json();
-    // Pak top 10 unieke tokens
-    const seen = new Set();
-    const tokens = [];
-    for (const item of (data || [])) {
-      const name = item.tokenAddress;
-      if (!seen.has(name) && item.chainId === 'ethereum' || item.chainId === 'bsc' || item.chainId === 'solana') {
-        seen.add(name);
-        tokens.push({ symbol: item.description || item.tokenAddress.slice(0,8), address: item.tokenAddress, chain: item.chainId });
-        if (tokens.length >= 8) break;
-      }
-    }
-    return tokens;
-  } catch(e) { return []; }
-}
-
-async function fetchDexPrices(tokens) {
-  const lines = [];
-  await Promise.allSettled(tokens.map(async t => {
-    try {
-      const res = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${t.address}`);
-      const data = await res.json();
-      const pair = data.pairs?.[0];
-      if (pair && pair.priceUsd) {
-        const p  = parseFloat(pair.priceUsd);
-        const ch = parseFloat(pair.priceChange?.h24 || 0);
-        const vol = pair.volume?.h24
-          ? (pair.volume.h24 > 1e6 ? '$'+(pair.volume.h24/1e6).toFixed(1)+'M' : '$'+pair.volume.h24.toFixed(0))
-          : '?';
-        const liq = pair.liquidity?.usd
-          ? '$'+(pair.liquidity.usd/1e3).toFixed(0)+'K liq'
-          : '';
-        lines.push(`${pair.baseToken?.symbol || t.symbol} (${t.chain}): $${p < 0.01 ? p.toFixed(6) : p.toFixed(4)} | 24h: ${ch.toFixed(2)}% | Vol: ${vol} ${liq}`);
-      }
-    } catch(e) {}
-  }));
-  return lines;
-}
-
-async function runScan() {
+// ─── MAIN ANALYSIS ────────────────────────────────────────────
+async function runAnalysis() {
   const apiKey = document.getElementById('apiKey').value.trim();
   if (!apiKey) { alert('Vul eerst je Anthropic API key in!'); return; }
 
-  const risk   = document.getElementById('riskProfile').value;
-  const amount = document.getElementById('amount').value;
-  const tf     = document.getElementById('timeframe').value;
+  const coin = document.getElementById('coinSelect').value;
+  const tf   = document.getElementById('timeframe').value;
+  const risk = document.getElementById('riskProfile').value;
+  const amt  = document.getElementById('amount').value;
+  const lev  = selectedLev;
 
-  const scanBtn = document.getElementById('scanBtn');
-  scanBtn.disabled = true;
-  scanBtn.textContent = '🔍 KOERSEN SCANNEN...';
-
-  const scanResults = document.getElementById('scanResults');
-  scanResults.style.display = 'block';
-  document.getElementById('scanBody').innerHTML = '<div class="dots"><span></span><span></span><span></span></div>';
-
-  // 1. Alle coins ophalen (MEXC lijst bij leverage)
-  const scanCoins = leverageMode ? MEXC_FUTURES_COINS.slice(0, 20) : [
-    'Bitcoin (BTC)','Ethereum (ETH)','Solana (SOL)','BNB (BNB)',
-    'XRP (XRP)','Dogecoin (DOGE)','Toncoin (TON)','Chainlink (LINK)',
-    'Polkadot (DOT)','Uniswap (UNI)','Litecoin (LTC)','Polygon (MATIC)',
-    'Pepe (PEPE)','Shiba Inu (SHIB)','Sui (SUI)','Cardano (ADA)',
-    'Avalanche (AVAX)','FIAS (FIAS)','DevvE (DevvE)'
-  ];
-
-  scanBtn.textContent = '🔍 VASTE COINS OPHALEN...';
-  const priceResults = await Promise.allSettled(
-    scanCoins.map(c => fetchLivePrice(c).then(p => ({ coin: c, price: p })))
-  );
-
-  const knownLines = priceResults
-    .filter(r => r.status === 'fulfilled' && r.value.price)
-    .map(r => {
-      const { coin, price } = r.value;
-      const p  = price.usd;
-      const ch = price.usd_24h_change?.toFixed(2) ?? '?';
-      const vol = price.usd_24h_vol
-        ? (price.usd_24h_vol > 1e9 ? '$'+(price.usd_24h_vol/1e9).toFixed(2)+'B' : '$'+(price.usd_24h_vol/1e6).toFixed(1)+'M')
-        : '?';
-      return `${coin}: $${p < 0.01 ? p.toFixed(6) : p.toLocaleString('en-US')} | 24h: ${ch}% | Vol: ${vol}`;
-    });
-
-  // 2. Trending DexScreener tokens ophalen
-  scanBtn.textContent = '🔍 TRENDING TOKENS SCANNEN...';
-  const trendingTokens = await fetchTrendingDex();
-  const trendingLines  = trendingTokens.length > 0 ? await fetchDexPrices(trendingTokens) : [];
-
-  scanBtn.textContent = '🔍 AI ANALYSEERT...';
-
-  const allLines = [
-    '=== BEKENDE COINS ===',
-    ...knownLines,
-    '',
-    '=== TRENDING / NIEUWE TOKENS (DexScreener) ===',
-    ...(trendingLines.length > 0 ? trendingLines : ['Geen trending data beschikbaar'])
-  ].join('\n');
-
-  const scanMaxLev = leverageMode ? document.getElementById('maxLeverage').value : null;
-  const scanLevCtx = leverageMode ? ` | MODUS: Leverage trading | Max hefboom: ${scanMaxLev}x` : ' | MODUS: Spot trading';
-
-  try {
-    const result = await callClaude(
-      `Je bent een crypto markt scanner AI. Analyseer de onderstaande live marktdata — zowel bekende coins als trending tokens van DexScreener.
-
-Identificeer de TOP 3 meest interessante handelskansen over de HELE lijst.
-Criteria: momentum, volume, liquiditeit, risk/reward, trend.
-Risicoprofiel: ${risk} | Budget: $${amount} | Tijdframe: ${tf}${scanLevCtx}
-
-${leverageMode ? `Dit zijn LEVERAGE trades. Gebruik dit format per kans:
-🥇/🥈/🥉 [COIN] — [LONG / SHORT]
-📊 Reden: [1 zin waarom]
-💥 Hefboom: [Xx aanbevolen] (max ${scanMaxLev}x) | TP: [%winst] | SL: [%verlies]
-💀 Liquidatie bij: [prijs]
-⚠️ Risico: [LAAG/MEDIUM/HOOG] | Let op: [1 waarschuwing]` :
-`Gebruik dit format per kans:
-🥇/🥈/🥉 [COIN] — [BUY/SELL/HOLD]
-📊 Reden: [1 zin waarom]
-🎯 Kans: [%] | ⚠️ Risico: [LAAG/MEDIUM/HOOG]
-💡 Actie: [concreet wat te doen]
-⚠️ Let op: [1 waarschuwing bij nieuwe/kleine tokens]`}
-
-Sluit af met 1 zin algemeen marktsentiment. Schrijf in het Nederlands. Geen garanties.`,
-      allLines
-    );
-
-    document.getElementById('scanBody').innerHTML = renderMd(result);
-    document.getElementById('scanTime').textContent =
-      'bijgewerkt ' + new Date().toLocaleTimeString('nl-NL', {hour:'2-digit', minute:'2-digit'});
-  } catch(e) {
-    document.getElementById('scanBody').innerHTML =
-      '<span style="color:var(--red)">❌ ' + e.message + '</span>';
-  }
-
-  scanBtn.disabled = false;
-  scanBtn.textContent = '🔍 SCAN ALLE COINS OP KANSEN';
-}
-async function runAnalysis() {
-  const apiKey = document.getElementById('apiKey').value.trim();
-  if (!apiKey) {
-    alert('Vul eerst je Anthropic API key in!');
-    return;
-  }
-
-  const coin      = document.getElementById('coinSelect').value;
-  const timeframe = document.getElementById('timeframe').value;
-  const risk      = document.getElementById('riskProfile').value;
-  const amount    = document.getElementById('amount').value;
+  if (!coin) { alert('Selecteer een coin'); return; }
 
   const btn = document.getElementById('analyzeBtn');
   btn.disabled = true;
-  btn.textContent = '⬡ KOERSEN OPHALEN...';
+  btn.textContent = '⚡ KOERS OPHALEN...';
 
-  const results = document.getElementById('results');
-  results.classList.add('visible');
-  document.getElementById('payLog').style.display = 'none';
-  ['trend','signal','risk','advice'].forEach(id => {
-    loading(id);
-    setChip(id, '');
+  document.getElementById('results').classList.add('visible');
+  document.getElementById('directionBar').className = 'direction-bar';
+  ['structure','signal','risk','execute'].forEach(id => {
+    loading(id); setChip(id, '');
   });
 
-  // Haal live koers op
-  btn.textContent = '⬡ ENTITIES VERWERKEN...';
-  const priceData = await fetchLivePrice(coin);
-  let priceContext = '';
-  if (priceData) {
-    const p    = priceData.usd;
-    const ch   = priceData.usd_24h_change?.toFixed(2);
-    const vol  = priceData.usd_24h_vol ? '$' + (priceData.usd_24h_vol / 1e9).toFixed(2) + 'B' : 'onbekend';
-    const mcap = priceData.usd_market_cap ? '$' + (priceData.usd_market_cap / 1e9).toFixed(1) + 'B' : 'onbekend';
-    priceContext = ` | LIVE KOERS: $${p.toLocaleString('en-US')} | 24h verandering: ${ch}% | 24h volume: ${vol} | Market cap: ${mcap}`;
+  // Live koers ophalen
+  const price = await fetchPrice(coin);
+  let priceCtx = '';
+  if (price) {
+    const p   = price.current_price;
+    const ch  = price.price_change_percentage_24h?.toFixed(2);
+    const vol = price.total_volume
+      ? (price.total_volume > 1e9 ? '$' + (price.total_volume/1e9).toFixed(2) + 'B'
+                                  : '$' + (price.total_volume/1e6).toFixed(1) + 'M')
+      : '?';
+    priceCtx = ` | LIVE: $${p.toLocaleString('en-US')} | 24h: ${ch}% | Vol: ${vol}`;
   }
 
-  const maxLev  = leverageMode ? document.getElementById('maxLeverage').value : null;
-  const levCtx  = leverageMode ? ` | MODUS: Leverage trading | Max hefboom: ${maxLev}x` : ' | MODUS: Spot trading';
-  const context = `Coin: ${coin} | Tijdframe: ${timeframe} | Risicoprofiel: ${risk} | Investering: $${amount}${levCtx}${priceContext}`;
-  const disclaimer = "Dit is uitsluitend educatief. Geef geen garanties. Wees realistisch. Gebruik de meegeleverde live koers als basis voor entry zones, targets en stop loss.";
+  const ctx = `Coin: ${coin} | Tijdframe: ${tf} | Risico: ${risk} | Kapitaal: $${amt} | Hefboom: ${lev}x${priceCtx}`;
+  const disc = 'Uitsluitend educatief. Gebruik de live koers. Geen garanties. Wees realistisch over leverage risico\'s.';
 
-  const isLev   = leverageMode;
-  const maxLev2 = isLev ? document.getElementById('maxLeverage').value : null;
-  const disclaimer = "Dit is uitsluitend educatief. Geef geen garanties. Wees realistisch. Gebruik de meegeleverde live koers als basis voor entry zones, targets en stop loss.";
+  btn.textContent = '⚡ ENTITIES ACTIEF...';
 
-  // Entity 1: Trend Analyzer
-  setChip('trend', 'running');
+  // ENTITY 01: Market Structure
+  setChip('structure', 'running');
   try {
-    const trend = await callClaude(
-      `Je bent een crypto trend-analyse AI. ${disclaimer} Analyseer de markttrend voor de opgegeven coin. Bespreek: huidige marktfase (bull/bear/sideways), dominante technische indicatoren (RSI, MA, volume trends), en sentiment.${isLev ? ' Geef ook aan of de trend beter geschikt is voor LONG of SHORT leverage posities.' : ''} Schrijf in het Nederlands, max 5 zinnen, geen bullet points.`,
-      context
-    );
-    document.getElementById('body-trend').innerHTML = renderMd(trend);
-    setChip('trend', 'done');
-  } catch(e) { showError('trend', e.message); }
+    const res = await callClaude(
+      `Je bent een crypto marktstructuur analist voor FIAS Arche. ${disc}
+Analyseer de marktstructuur voor leverage trading. Bespreek:
+- Huidige trend (bull/bear/sideways) en fase
+- Belangrijkste steun- en weerstandsniveaus
+- Of de trend LONG of SHORT favoreert voor ${tf}
+- Volume en momentum analyse
+Schrijf in het Nederlands, max 4 zinnen, geen bullet points.`, ctx);
+    document.getElementById('body-structure').innerHTML = renderMd(res);
+    setChip('structure', 'done');
+  } catch(e) { showError('structure', e.message); }
 
-  // Entity 2: Signal Generator
+  // ENTITY 02: Leverage Signal
   setChip('signal', 'running');
   try {
-    const signal = await callClaude(
-      `Je bent een crypto trading signaal AI. ${disclaimer} Genereer een trading signaal.
+    const res = await callClaude(
+      `Je bent een FIAS Arche leverage signaal generator voor MEXC Futures. ${disc}
+Genereer een concreet leverage signaal. Gebruik EXACT dit format:
 
-${isLev ? `Gebruik dit format:
 ⚡ RICHTING: [LONG / SHORT]
 📍 Entry zone: [prijsrange]
-🎯 Take profit 1: [doel] | TP2: [doel]
-🛑 Stop loss: [niveau]
-💥 Aanbevolen hefboom: [Xx] (max ${maxLev2}x)
-💀 Liquidatieprijs bij ${maxLev2}x: [niveau]
-💰 Margin vereist: [$bedrag bij $${amount}]
-📊 Risk/Reward: [ratio]` : `Gebruik dit format:
-🟢 SIGNAAL: [BUY / SELL / HOLD]
-📍 Entry zone: [prijsrange]
-🎯 Take profit: [doel]
-🛑 Stop loss: [niveau]
-📊 Kans van slagen: [%]`}
+🎯 Take Profit 1: [prijs] ([+%])
+🎯 Take Profit 2: [prijs] ([+%])
+🛑 Stop Loss: [prijs] ([-% van entry])
+💥 Aanbevolen hefboom: [Xx] (max ${lev}x)
+💀 Liquidatieprijs bij ${lev}x: [prijs]
+💰 Positiegrootte: [$bedrag van $${amt}]
+📊 Risk/Reward: [ratio]
+🎯 Kans van slagen: [%]
 
-Schrijf in het Nederlands. Wees realistisch en voorzichtig.`,
-      context
-    );
-    document.getElementById('body-signal').innerHTML = renderMd(signal);
+Schrijf in het Nederlands. Gebruik de live koers als basis.`, ctx);
+
+    document.getElementById('body-signal').innerHTML = renderMd(res);
     setChip('signal', 'done');
+
+    // Direction bar updaten
+    const isLong = res.toUpperCase().includes('LONG');
+    const isShort = res.toUpperCase().includes('SHORT');
+    const bar = document.getElementById('directionBar');
+    if (isLong || isShort) {
+      bar.className = 'direction-bar visible ' + (isLong ? 'long' : 'short');
+      document.getElementById('directionIcon').textContent = isLong ? '📈' : '📉';
+      document.getElementById('directionText').textContent = isLong ? `LONG ${lev}x — ${coin}` : `SHORT ${lev}x — ${coin}`;
+    }
   } catch(e) { showError('signal', e.message); }
 
-  // Entity 3: Risk Assessor
+  // ENTITY 03: Risk Calculator
   setChip('risk', 'running');
   try {
-    const riskRes = await callClaude(
-      `Je bent een crypto risico-analyse AI. ${disclaimer} Beoordeel de risico's voor deze trade.
+    const res = await callClaude(
+      `Je bent een FIAS Arche risico calculator voor MEXC leverage trading. ${disc}
+Bereken en beoordeel alle risico's voor deze ${lev}x leverage trade.
 
 Gebruik dit format:
 ⚠️ Risico niveau: [LAAG / MEDIUM / HOOG / EXTREEM]
-💸 Max verlies bij $${amount}: [bedrag]${isLev ? `\n💀 Liquidatierisico bij ${maxLev2}x: [beschrijving]\n📐 Aanbevolen positiegrootte: [bedrag om veilig te blijven]` : ''}
+💸 Max verlies bij SL: [$bedrag] ([% van $${amt}])
+💀 Liquidatieprijs bij ${lev}x: [berekening]
+📐 Aanbevolen margin: [$bedrag] ([% van kapitaal inzetten])
+🔒 Margin call niveau: [prijs]
+📉 Max drawdown voor liquidatie: [%]
 🔍 Risicofactoren:
 - [factor 1]
 - [factor 2]
 - [factor 3]
 
-Schrijf in het Nederlands.`,
-      context
-    );
-    document.getElementById('body-risk').innerHTML = renderMd(riskRes);
+Schrijf in het Nederlands.`, ctx);
+    document.getElementById('body-risk').innerHTML = renderMd(res);
     setChip('risk', 'done');
   } catch(e) { showError('risk', e.message); }
 
-  // Entity 4: Trade Advisor
-  setChip('advice', 'running');
+  // ENTITY 04: MEXC Executor
+  setChip('execute', 'running');
   try {
-    const advice = await callClaude(
-      `Je bent een crypto trade advisor AI. ${disclaimer} Geef concreet praktisch advies voor $${amount} in ${coin} voor ${timeframe} met ${risk} risicoprofiel.${isLev ? ` Dit is een leverage trade op MEXC Futures (max ${maxLev2}x). Adviseer: exacte hefboom instelling op MEXC, hoe stop loss instellen om liquidatie te voorkomen, wanneer winst nemen, en geef 1 duidelijke waarschuwing over leverage risico's.` : ' Bespreek: of dit een goed moment is, hoe te spreiden, wanneer te handelen, en 1 waarschuwing.'} Max 6 zinnen. Schrijf in het Nederlands.`,
-      context
-    );
-    document.getElementById('body-advice').innerHTML = renderMd(advice);
-    setChip('advice', 'done');
-  } catch(e) { showError('advice', e.message); }
+    const res = await callClaude(
+      `Je bent een FIAS Arche MEXC uitvoeringsadviseur. ${disc}
+Geef stap-voor-stap instructies voor het uitvoeren van deze ${lev}x leverage trade op MEXC Futures.
 
-  document.getElementById('payLog').style.display = 'block';
+Bespreek:
+1. Hoe de futures positie openen op MEXC (Cross/Isolated margin)
+2. Exacte hefboom instelling (${lev}x) en waarom
+3. Hoe stop loss instellen (TP/SL orders)
+4. Wanneer bijschalen of afbouwen
+5. 1 cruciale waarschuwing specifiek voor ${lev}x leverage
+
+Max 6 zinnen. Schrijf in het Nederlands.`, ctx);
+    document.getElementById('body-execute').innerHTML = renderMd(res);
+    setChip('execute', 'done');
+  } catch(e) { showError('execute', e.message); }
+
   btn.disabled = false;
-  btn.textContent = '⬡ NIEUW SIGNAAL GENEREREN';
+  btn.textContent = '⚡ NIEUW SIGNAAL GENEREREN';
+}
+
+// ─── MARKET SCANNER ───────────────────────────────────────────
+async function runScan() {
+  const apiKey = document.getElementById('apiKey').value.trim();
+  if (!apiKey) { alert('Vul eerst je Anthropic API key in!'); return; }
+
+  const tf   = document.getElementById('timeframe').value;
+  const risk = document.getElementById('riskProfile').value;
+  const amt  = document.getElementById('amount').value;
+  const lev  = selectedLev;
+
+  const scanBtn = document.getElementById('scanBtn');
+  scanBtn.disabled = true;
+  scanBtn.textContent = '🔍 MEXC SCANNEN...';
+
+  const scanSec = document.getElementById('scanSection');
+  scanSec.style.display = 'block';
+  document.getElementById('scanBody').innerHTML =
+    '<div class="dots"><span></span><span></span><span></span></div>';
+
+  // Top 12 coins ophalen parallel
+  const topCoins = MEXC_COINS.slice(0, 12);
+  scanBtn.textContent = '🔍 KOERSEN LADEN...';
+
+  const ids = topCoins
+    .map(c => COIN_IDS[c])
+    .filter(Boolean).join(',');
+
+  let priceLines = [];
+  try {
+    const r = await fetchT(`https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${ids}&price_change_percentage=24h`);
+    const data = await r.json();
+    priceLines = data.map(c => {
+      const p  = c.current_price;
+      const ch = c.price_change_percentage_24h?.toFixed(2);
+      const vol = c.total_volume > 1e9
+        ? '$' + (c.total_volume/1e9).toFixed(2) + 'B'
+        : '$' + (c.total_volume/1e6).toFixed(1) + 'M';
+      return `${c.symbol?.toUpperCase()}: $${p.toLocaleString('en-US')} | 24h: ${ch}% | Vol: ${vol}`;
+    });
+  } catch(e) {}
+
+  scanBtn.textContent = '🔍 AI ANALYSEERT...';
+
+  try {
+    const result = await callClaude(
+      `Je bent de FIAS Arche MEXC Leverage Scanner. Analyseer de marktdata en identificeer de TOP 3 beste leverage kansen op MEXC Futures.
+Criteria: momentum, volume, volatiliteit, trend richting, risk/reward.
+Tijdframe: ${tf} | Risico: ${risk} | Kapitaal: $${amt} | Hefboom: max ${lev}x
+
+Gebruik EXACT dit format per kans:
+
+🥇/🥈/🥉 [COIN] — [LONG / SHORT] [Xx hefboom]
+📊 Reden: [1 zin waarom dit de beste kans is]
+📍 Entry: [prijsniveau] | 🎯 TP: [doel] | 🛑 SL: [niveau]
+💀 Liquidatie bij ${lev}x: [prijs]
+⚠️ Risico: [LAAG/MEDIUM/HOOG] | Kans: [%]
+
+Sluit af met 1 zin marktsentiment. Schrijf in het Nederlands. Geen garanties.`,
+      '=== MEXC FUTURES MARKTDATA ===\n' + priceLines.join('\n'),
+      1500
+    );
+
+    document.getElementById('scanBody').innerHTML = renderMd(result);
+    document.getElementById('scanTime').textContent =
+      new Date().toLocaleTimeString('nl-NL', {hour:'2-digit', minute:'2-digit'});
+  } catch(e) {
+    document.getElementById('scanBody').innerHTML =
+      `<span style="color:#ff3355">❌ ${e.message}</span>`;
+  }
+
+  scanBtn.disabled = false;
+  scanBtn.textContent = '🔍 SCAN MEXC OP LEVERAGE KANSEN';
 }
 
 // ─── INIT ─────────────────────────────────────────────────────
 (function init() {
-  const saved = localStorage.getItem('signals_apikey');
+  // API key herstellen
+  const saved = localStorage.getItem('signalslev_apikey');
   if (saved) document.getElementById('apiKey').value = saved;
-  updateCoinDropdown();
-  loadFiasEcosystem();
+
+  // Coin dropdown vullen
+  const sel = document.getElementById('coinSelect');
+  sel.innerHTML = MEXC_COINS.map(c =>
+    `<option value="${c}">${c}</option>`
+  ).join('');
+
+  // Prijzen laden
+  loadPriceStrip();
 })();
 </script>
+
 </body>
 </html>
