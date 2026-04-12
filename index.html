@@ -621,6 +621,12 @@ window.addEventListener('DOMContentLoaded', () => {
   if (saved) document.getElementById('apiKey').value = saved;
   updateCoinDropdown();
 });
+// Fallback: als DOMContentLoaded al gevuurd is (script staat onderaan)
+if (document.readyState !== 'loading') {
+  const saved = localStorage.getItem('signals_apikey');
+  if (saved) document.getElementById('apiKey').value = saved;
+  updateCoinDropdown();
+}
 
 function toggleKey() {
   const f = document.getElementById('apiKey');
@@ -720,13 +726,14 @@ async function fetchWithTimeout(url, ms = 6000) {
 }
 
 async function loadFiasEcosystem() {
-  // DevvE via CoinGecko
+  // DevvE via CoinGecko markets endpoint (betrouwbaarder)
   try {
-    const res = await fetchWithTimeout('https://api.coingecko.com/api/v3/simple/price?ids=devve&vs_currencies=usd&include_24hr_change=true');
+    const res = await fetchWithTimeout('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=devve&price_change_percentage=24h');
     const data = await res.json();
-    if (data.devve) {
-      const p = data.devve.usd;
-      const ch = data.devve.usd_24h_change;
+    const coin = data?.[0];
+    if (coin) {
+      const p  = coin.current_price;
+      const ch = coin.price_change_percentage_24h;
       document.getElementById('s-devvePrice').textContent = p < 0.01 ? '$' + p.toFixed(6) : '$' + p.toFixed(4);
       const chEl = document.getElementById('s-devveChange');
       chEl.textContent = (ch >= 0 ? '▲ +' : '▼ ') + ch.toFixed(2) + '%';
