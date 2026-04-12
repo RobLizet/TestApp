@@ -430,15 +430,26 @@
         <option value="Solana (SOL)">Solana (SOL)</option>
         <option value="BNB (BNB)">BNB (BNB)</option>
         <option value="XRP (XRP)">XRP (XRP)</option>
-        <option value="FIAS (FIAS)">⬡ FIAS (FIAS)</option>
-        <option value="DevvE (DevvE)">⬡ DevvE (DevvE)</option>
+        <option value="Dogecoin (DOGE)">Dogecoin (DOGE)</option>
+        <option value="Toncoin (TON)">Toncoin (TON)</option>
+        <option value="Chainlink (LINK)">Chainlink (LINK)</option>
+        <option value="Polkadot (DOT)">Polkadot (DOT)</option>
+        <option value="Uniswap (UNI)">Uniswap (UNI)</option>
+        <option value="Litecoin (LTC)">Litecoin (LTC)</option>
+        <option value="Polygon (MATIC)">Polygon (MATIC)</option>
+        <option value="Pepe (PEPE)">Pepe (PEPE)</option>
+        <option value="Shiba Inu (SHIB)">Shiba Inu (SHIB)</option>
+        <option value="Sui (SUI)">Sui (SUI)</option>
         <option value="Cardano (ADA)">Cardano (ADA)</option>
         <option value="Avalanche (AVAX)">Avalanche (AVAX)</option>
+        <option value="FIAS (FIAS)">⬡ FIAS (FIAS)</option>
+        <option value="DevvE (DevvE)">⬡ DevvE (DevvE)</option>
       </select>
     </div>
     <div class="input-group">
       <span class="input-label">Tijdframe</span>
       <select id="timeframe">
+        <option value="scalp (15min-4uur)">Scalp (15m-4u)</option>
         <option value="korte termijn (1-7 dagen)">Korte termijn (1-7d)</option>
         <option value="middellange termijn (1-4 weken)">Middellange (1-4w)</option>
         <option value="lange termijn (1-6 maanden)">Lange termijn (1-6m)</option>
@@ -455,6 +466,27 @@
     <div class="input-group">
       <span class="input-label">Investering ($)</span>
       <input type="number" id="amount" value="500" min="1" />
+    </div>
+  </div>
+
+  <!-- Leverage toggle -->
+  <div style="display:flex;gap:0.5rem;margin-bottom:1rem;align-items:stretch">
+    <div class="input-group" style="flex:1;margin-bottom:0;display:flex;align-items:center;gap:0.8rem;cursor:pointer" onclick="toggleLeverage()">
+      <div id="leverageDot" style="width:14px;height:14px;border-radius:50%;background:var(--muted);border:2px solid var(--border);transition:all 0.2s;flex-shrink:0"></div>
+      <div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:0.6rem;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase">Modus</div>
+        <div id="leverageLabel" style="font-family:'IBM Plex Mono',monospace;font-size:0.85rem;font-weight:600;color:var(--text)">Spot Trading</div>
+      </div>
+    </div>
+    <div class="input-group" id="leverageGroup" style="flex:1;margin-bottom:0;display:none">
+      <span class="input-label">Max Hefboom</span>
+      <select id="maxLeverage">
+        <option value="3">Max 3x</option>
+        <option value="5">Max 5x</option>
+        <option value="10">Max 10x</option>
+        <option value="20">Max 20x</option>
+        <option value="50">Max 50x</option>
+      </select>
     </div>
   </div>
 
@@ -563,7 +595,46 @@
 </div>
 
 <script>
-// ─── API KEY ──────────────────────────────────────────────────
+// ─── COIN LIJSTEN ─────────────────────────────────────────────
+const SPOT_COINS = [
+  'Bitcoin (BTC)','Ethereum (ETH)','Solana (SOL)','BNB (BNB)',
+  'XRP (XRP)','Dogecoin (DOGE)','Toncoin (TON)','Chainlink (LINK)',
+  'Polkadot (DOT)','Uniswap (UNI)','Litecoin (LTC)','Polygon (MATIC)',
+  'Pepe (PEPE)','Shiba Inu (SHIB)','Sui (SUI)','Cardano (ADA)',
+  'Avalanche (AVAX)','FIAS (FIAS)','DevvE (DevvE)'
+];
+
+// Coins beschikbaar op MEXC Futures
+const MEXC_FUTURES_COINS = [
+  'Bitcoin (BTC)','Ethereum (ETH)','Solana (SOL)','BNB (BNB)',
+  'XRP (XRP)','Dogecoin (DOGE)','Cardano (ADA)','Avalanche (AVAX)',
+  'Chainlink (LINK)','Polkadot (DOT)','Litecoin (LTC)','Polygon (MATIC)',
+  'Pepe (PEPE)','Shiba Inu (SHIB)','Sui (SUI)','Toncoin (TON)',
+  'Uniswap (UNI)','Aptos (APT)','Near Protocol (NEAR)','Injective (INJ)',
+  'Arbitrum (ARB)','Optimism (OP)','Sei (SEI)','Render (RNDR)',
+  'Fetch.ai (FET)','Celestia (TIA)','Pyth Network (PYTH)','Jupiter (JUP)',
+  'Bonk (BONK)','WIF (WIF)','Notcoin (NOT)','Floki (FLOKI)'
+];
+
+function updateCoinDropdown() {
+  const sel   = document.getElementById('coinSelect');
+  const coins = leverageMode ? MEXC_FUTURES_COINS : SPOT_COINS;
+  const cur   = sel.value;
+  sel.innerHTML = coins.map(c =>
+    `<option value="${c}"${c === cur ? ' selected' : ''}>${leverageMode && ['FIAS (FIAS)','DevvE (DevvE)'].includes(c) ? '⬡ ' : ''}${c}</option>`
+  ).join('');
+}
+let leverageMode = false;
+function toggleLeverage() {
+  leverageMode = !leverageMode;
+  document.getElementById('leverageDot').style.background   = leverageMode ? '#ff4466' : 'var(--muted)';
+  document.getElementById('leverageDot').style.borderColor  = leverageMode ? '#ff4466' : 'var(--border)';
+  document.getElementById('leverageDot').style.boxShadow    = leverageMode ? '0 0 8px #ff4466' : 'none';
+  document.getElementById('leverageLabel').textContent      = leverageMode ? '⚡ Leverage (MEXC)' : 'Spot Trading';
+  document.getElementById('leverageLabel').style.color      = leverageMode ? '#ff4466' : 'var(--text)';
+  document.getElementById('leverageGroup').style.display    = leverageMode ? 'block' : 'none';
+  updateCoinDropdown();
+}
 window.addEventListener('DOMContentLoaded', () => {
   const saved = localStorage.getItem('signals_apikey');
   if (saved) document.getElementById('apiKey').value = saved;
@@ -702,15 +773,40 @@ loadFiasEcosystem();
 
 // ─── COIN ID MAP (CoinGecko) ──────────────────────────────────
 const COIN_IDS = {
-  'Bitcoin (BTC)':     'bitcoin',
-  'Ethereum (ETH)':    'ethereum',
-  'Solana (SOL)':      'solana',
-  'BNB (BNB)':         'binancecoin',
-  'XRP (XRP)':         'ripple',
-  'Cardano (ADA)':     'cardano',
-  'Avalanche (AVAX)':  'avalanche-2',
-  'FIAS (FIAS)':       'dexscreener:0x21e88f4482cd48deab1ca5eddabdfb14cb8ad76f',
-  'DevvE (DevvE)':     'devve'
+  'Bitcoin (BTC)':          'bitcoin',
+  'Ethereum (ETH)':         'ethereum',
+  'Solana (SOL)':           'solana',
+  'BNB (BNB)':              'binancecoin',
+  'XRP (XRP)':              'ripple',
+  'Dogecoin (DOGE)':        'dogecoin',
+  'Toncoin (TON)':          'the-open-network',
+  'Chainlink (LINK)':       'chainlink',
+  'Polkadot (DOT)':         'polkadot',
+  'Uniswap (UNI)':          'uniswap',
+  'Litecoin (LTC)':         'litecoin',
+  'Polygon (MATIC)':        'matic-network',
+  'Pepe (PEPE)':            'pepe',
+  'Shiba Inu (SHIB)':       'shiba-inu',
+  'Sui (SUI)':              'sui',
+  'Cardano (ADA)':          'cardano',
+  'Avalanche (AVAX)':       'avalanche-2',
+  'Aptos (APT)':            'aptos',
+  'Near Protocol (NEAR)':   'near',
+  'Injective (INJ)':        'injective-protocol',
+  'Arbitrum (ARB)':         'arbitrum',
+  'Optimism (OP)':          'optimism',
+  'Sei (SEI)':              'sei-network',
+  'Render (RNDR)':          'render-token',
+  'Fetch.ai (FET)':         'fetch-ai',
+  'Celestia (TIA)':         'celestia',
+  'Pyth Network (PYTH)':    'pyth-network',
+  'Jupiter (JUP)':          'jupiter-exchange-solana',
+  'Bonk (BONK)':            'bonk',
+  'WIF (WIF)':              'dogwifcoin',
+  'Notcoin (NOT)':          'notcoin',
+  'Floki (FLOKI)':          'floki',
+  'FIAS (FIAS)':            'dexscreener:0x21e88f4482cd48deab1ca5eddabdfb14cb8ad76f',
+  'DevvE (DevvE)':          'devve'
 };
 
 async function fetchLivePrice(coin) {
@@ -803,11 +899,13 @@ async function runScan() {
   scanResults.style.display = 'block';
   document.getElementById('scanBody').innerHTML = '<div class="dots"><span></span><span></span><span></span></div>';
 
-  // 1. Vaste coins ophalen
-  const scanCoins = [
-    'Bitcoin (BTC)', 'Ethereum (ETH)', 'Solana (SOL)',
-    'BNB (BNB)', 'XRP (XRP)', 'Cardano (ADA)',
-    'Avalanche (AVAX)', 'FIAS (FIAS)', 'DevvE (DevvE)'
+  // 1. Alle coins ophalen (MEXC lijst bij leverage)
+  const scanCoins = leverageMode ? MEXC_FUTURES_COINS.slice(0, 20) : [
+    'Bitcoin (BTC)','Ethereum (ETH)','Solana (SOL)','BNB (BNB)',
+    'XRP (XRP)','Dogecoin (DOGE)','Toncoin (TON)','Chainlink (LINK)',
+    'Polkadot (DOT)','Uniswap (UNI)','Litecoin (LTC)','Polygon (MATIC)',
+    'Pepe (PEPE)','Shiba Inu (SHIB)','Sui (SUI)','Cardano (ADA)',
+    'Avalanche (AVAX)','FIAS (FIAS)','DevvE (DevvE)'
   ];
 
   scanBtn.textContent = '🔍 VASTE COINS OPHALEN...';
@@ -842,22 +940,31 @@ async function runScan() {
     ...(trendingLines.length > 0 ? trendingLines : ['Geen trending data beschikbaar'])
   ].join('\n');
 
+  const scanMaxLev = leverageMode ? document.getElementById('maxLeverage').value : null;
+  const scanLevCtx = leverageMode ? ` | MODUS: Leverage trading | Max hefboom: ${scanMaxLev}x` : ' | MODUS: Spot trading';
+
   try {
     const result = await callClaude(
-      `Je bent een crypto markt scanner AI. Analyseer de onderstaande live marktdata — zowel bekende coins als trending/nieuwe tokens van DexScreener.
+      `Je bent een crypto markt scanner AI. Analyseer de onderstaande live marktdata — zowel bekende coins als trending tokens van DexScreener.
 
-Identificeer de TOP 3 meest interessante handelskansen over de HELE lijst (bekende én nieuwe tokens).
+Identificeer de TOP 3 meest interessante handelskansen over de HELE lijst.
 Criteria: momentum, volume, liquiditeit, risk/reward, trend.
-Risicoprofiel: ${risk} | Budget: $${amount} | Tijdframe: ${tf}
+Risicoprofiel: ${risk} | Budget: $${amount} | Tijdframe: ${tf}${scanLevCtx}
 
-Gebruik dit format voor elke kans:
-🥇/🥈/🥉 [COIN/TOKEN] — [BUY/SELL/HOLD]
+${leverageMode ? `Dit zijn LEVERAGE trades. Gebruik dit format per kans:
+🥇/🥈/🥉 [COIN] — [LONG / SHORT]
+📊 Reden: [1 zin waarom]
+💥 Hefboom: [Xx aanbevolen] (max ${scanMaxLev}x) | TP: [%winst] | SL: [%verlies]
+💀 Liquidatie bij: [prijs]
+⚠️ Risico: [LAAG/MEDIUM/HOOG] | Let op: [1 waarschuwing]` :
+`Gebruik dit format per kans:
+🥇/🥈/🥉 [COIN] — [BUY/SELL/HOLD]
 📊 Reden: [1 zin waarom]
 🎯 Kans: [%] | ⚠️ Risico: [LAAG/MEDIUM/HOOG]
 💡 Actie: [concreet wat te doen]
-⚠️ Let op: [1 waarschuwing bij nieuwe/kleine tokens]
+⚠️ Let op: [1 waarschuwing bij nieuwe/kleine tokens]`}
 
-Sluit af met 1 zin algemeen marktsentiment. Schrijf in het Nederlands. Geen garanties, wees eerlijk over risico's van kleine tokens.`,
+Sluit af met 1 zin algemeen marktsentiment. Schrijf in het Nederlands. Geen garanties.`,
       allLines
     );
 
@@ -908,60 +1015,85 @@ async function runAnalysis() {
     priceContext = ` | LIVE KOERS: $${p.toLocaleString('en-US')} | 24h verandering: ${ch}% | 24h volume: ${vol} | Market cap: ${mcap}`;
   }
 
-  const context = `Coin: ${coin} | Tijdframe: ${timeframe} | Risicoprofiel: ${risk} | Investering: $${amount}${priceContext}`;
+  const maxLev  = leverageMode ? document.getElementById('maxLeverage').value : null;
+  const levCtx  = leverageMode ? ` | MODUS: Leverage trading | Max hefboom: ${maxLev}x` : ' | MODUS: Spot trading';
+  const context = `Coin: ${coin} | Tijdframe: ${timeframe} | Risicoprofiel: ${risk} | Investering: $${amount}${levCtx}${priceContext}`;
+  const disclaimer = "Dit is uitsluitend educatief. Geef geen garanties. Wees realistisch. Gebruik de meegeleverde live koers als basis voor entry zones, targets en stop loss.";
+
+  const isLev   = leverageMode;
+  const maxLev2 = isLev ? document.getElementById('maxLeverage').value : null;
   const disclaimer = "Dit is uitsluitend educatief. Geef geen garanties. Wees realistisch. Gebruik de meegeleverde live koers als basis voor entry zones, targets en stop loss.";
 
   // Entity 1: Trend Analyzer
   setChip('trend', 'running');
   try {
     const trend = await callClaude(
-      `Je bent een crypto trend-analyse AI. ${disclaimer} Analyseer de algemene markttrend voor de opgegeven coin. Bespreek: huidige marktfase (bull/bear/sideways), dominante technische indicatoren (RSI, MA, volume trends), en sentiment. Schrijf in het Nederlands, max 5 zinnen, geen bullet points.`,
+      `Je bent een crypto trend-analyse AI. ${disclaimer} Analyseer de markttrend voor de opgegeven coin. Bespreek: huidige marktfase (bull/bear/sideways), dominante technische indicatoren (RSI, MA, volume trends), en sentiment.${isLev ? ' Geef ook aan of de trend beter geschikt is voor LONG of SHORT leverage posities.' : ''} Schrijf in het Nederlands, max 5 zinnen, geen bullet points.`,
       context
     );
     document.getElementById('body-trend').innerHTML = renderMd(trend);
     setChip('trend', 'done');
-  } catch(e) {
-    showError('trend', e.message);
-  }
+  } catch(e) { showError('trend', e.message); }
 
   // Entity 2: Signal Generator
   setChip('signal', 'running');
   try {
     const signal = await callClaude(
-      `Je bent een crypto trading signaal AI. ${disclaimer} Genereer een trading signaal voor de opgegeven situatie. Gebruik dit format:\n🟢 SIGNAAL: [BUY / SELL / HOLD]\n📍 Entry zone: [prijsrange]\n🎯 Take profit: [doel]\n🛑 Stop loss: [niveau]\n📊 Kans van slagen: [%]\n\nSchrijf in het Nederlands. Wees realistisch en voorzichtig.`,
+      `Je bent een crypto trading signaal AI. ${disclaimer} Genereer een trading signaal.
+
+${isLev ? `Gebruik dit format:
+⚡ RICHTING: [LONG / SHORT]
+📍 Entry zone: [prijsrange]
+🎯 Take profit 1: [doel] | TP2: [doel]
+🛑 Stop loss: [niveau]
+💥 Aanbevolen hefboom: [Xx] (max ${maxLev2}x)
+💀 Liquidatieprijs bij ${maxLev2}x: [niveau]
+💰 Margin vereist: [$bedrag bij $${amount}]
+📊 Risk/Reward: [ratio]` : `Gebruik dit format:
+🟢 SIGNAAL: [BUY / SELL / HOLD]
+📍 Entry zone: [prijsrange]
+🎯 Take profit: [doel]
+🛑 Stop loss: [niveau]
+📊 Kans van slagen: [%]`}
+
+Schrijf in het Nederlands. Wees realistisch en voorzichtig.`,
       context
     );
     document.getElementById('body-signal').innerHTML = renderMd(signal);
     setChip('signal', 'done');
-  } catch(e) {
-    showError('signal', e.message);
-  }
+  } catch(e) { showError('signal', e.message); }
 
   // Entity 3: Risk Assessor
   setChip('risk', 'running');
   try {
     const riskRes = await callClaude(
-      `Je bent een crypto risico-analyse AI. ${disclaimer} Beoordeel de risico's voor deze trade. Gebruik dit format:\n⚠️ Risico niveau: [LAAG / MEDIUM / HOOG / EXTREEM]\n💸 Max verlies bij $${amount}: [bedrag]\n🔍 Risicofactoren:\n- [factor 1]\n- [factor 2]\n- [factor 3]\n\nSchrijf in het Nederlands.`,
+      `Je bent een crypto risico-analyse AI. ${disclaimer} Beoordeel de risico's voor deze trade.
+
+Gebruik dit format:
+⚠️ Risico niveau: [LAAG / MEDIUM / HOOG / EXTREEM]
+💸 Max verlies bij $${amount}: [bedrag]${isLev ? `\n💀 Liquidatierisico bij ${maxLev2}x: [beschrijving]\n📐 Aanbevolen positiegrootte: [bedrag om veilig te blijven]` : ''}
+🔍 Risicofactoren:
+- [factor 1]
+- [factor 2]
+- [factor 3]
+
+Schrijf in het Nederlands.`,
       context
     );
     document.getElementById('body-risk').innerHTML = renderMd(riskRes);
     setChip('risk', 'done');
-  } catch(e) {
-    showError('risk', e.message);
-  }
+  } catch(e) { showError('risk', e.message); }
 
   // Entity 4: Trade Advisor
   setChip('advice', 'running');
   try {
     const advice = await callClaude(
-      `Je bent een crypto trade advisor AI. ${disclaimer} Geef concreet, praktisch advies voor iemand die $${amount} wil investeren in ${coin} voor ${timeframe} met een ${risk} risicoprofiel. Bespreek: of dit een goed moment is, hoe te spreiden, wanneer te handelen, en 1 belangrijke waarschuwing. Max 6 zinnen. Schrijf in het Nederlands.`,
+      `Je bent een crypto trade advisor AI. ${disclaimer} Geef concreet praktisch advies voor $${amount} in ${coin} voor ${timeframe} met ${risk} risicoprofiel.${isLev ? ` Dit is een leverage trade op MEXC Futures (max ${maxLev2}x). Adviseer: exacte hefboom instelling op MEXC, hoe stop loss instellen om liquidatie te voorkomen, wanneer winst nemen, en geef 1 duidelijke waarschuwing over leverage risico's.` : ' Bespreek: of dit een goed moment is, hoe te spreiden, wanneer te handelen, en 1 waarschuwing.'} Max 6 zinnen. Schrijf in het Nederlands.`,
       context
     );
     document.getElementById('body-advice').innerHTML = renderMd(advice);
     setChip('advice', 'done');
-  } catch(e) {
-    showError('advice', e.message);
-  }
+  } catch(e) { showError('advice', e.message); }
 
   document.getElementById('payLog').style.display = 'block';
   btn.disabled = false;
