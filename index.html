@@ -1158,12 +1158,28 @@ async function runAnalysis() {
   let priceCtx = '';
   if (price) {
     const p   = price.current_price;
-    const ch  = price.price_change_percentage_24h?.toFixed(2);
-    const vol = price.total_volume
-      ? (price.total_volume > 1e9 ? '$' + (price.total_volume/1e9).toFixed(2) + 'B'
-                                  : '$' + (price.total_volume/1e6).toFixed(1) + 'M')
-      : '?';
-    priceCtx = ` | LIVE: $${p.toLocaleString('en-US')} | 24h: ${ch}% | Vol: ${vol}`;
+    const ch  = (price.price_change_percentage_24h ?? 0).toFixed(2);
+    const vol = (price.total_volume ?? 0) > 1e9
+      ? '$' + (price.total_volume/1e9).toFixed(2) + 'B'
+      : '$' + ((price.total_volume ?? 0)/1e6).toFixed(1) + 'M';
+    const pStr = p >= 1 ? p.toLocaleString('en-US') : p.toFixed(6);
+    priceCtx = ` | LIVE: $${pStr} | 24h: ${ch}% | Vol: ${vol}`;
+  }
+
+  // OHLCV + Fibonacci + Market Structure
+  btn.textContent = '⚡ INDICATOREN BEREKENEN...';
+  let techCtx = '';
+  const coinId = COIN_IDS[coin];
+  if (coinId && !coinId.startsWith('dexscreener')) {
+    try {
+      const days = tf.includes('scalp') || tf.includes('intraday') ? 7 : tf.includes('swing') ? 14 : 30;
+      const ohlcv = await fetchOHLCV(coinId, days);
+      if (ohlcv && ohlcv.length > 5) {
+        const fib = calcFibonacci(ohlcv);
+        const ms  = calcMarketStructure(ohlcv);
+        techCtx   = formatTechContext(fib, ms);
+      }
+    } catch(e) {}
   }
 
   const ctx = `Coin: ${coin} | Tijdframe: ${tf} | Risico: ${risk} | Kapitaal: $${amt} | Hefboom: ${lev}x${priceCtx}${techCtx}`;
