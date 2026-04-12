@@ -426,6 +426,87 @@ animation: pulse 1s infinite;
 .dots span:nth-child(2) { animation-delay:.2s; }
 .dots span:nth-child(3) { animation-delay:.4s; }
 
+/* ── COIN SEARCH ── */
+.search-block {
+background: var(–card);
+border: 1px solid rgba(0,136,255,0.3);
+border-radius: 8px;
+padding: 1rem;
+margin-bottom: 1rem;
+}
+.search-title {
+font-family: ‘Orbitron’, monospace;
+font-size: 0.65rem;
+color: var(–blue);
+letter-spacing: 0.12em;
+margin-bottom: 0.7rem;
+display: flex;
+align-items: center;
+gap: 0.5rem;
+}
+.search-row {
+display: flex;
+gap: 0.5rem;
+margin-bottom: 0.7rem;
+}
+.search-input {
+flex: 1;
+background: rgba(0,136,255,0.05);
+border: 1px solid rgba(0,136,255,0.25);
+border-radius: 6px;
+padding: 0.6rem 0.8rem;
+color: var(–text);
+font-family: ‘Share Tech Mono’, monospace;
+font-size: 0.9rem;
+outline: none;
+}
+.search-input::placeholder { color: var(–muted); }
+.search-input:focus { border-color: var(–blue); }
+.search-btn {
+background: rgba(0,136,255,0.1);
+border: 1px solid rgba(0,136,255,0.4);
+color: var(–blue);
+border-radius: 6px;
+padding: 0.6rem 1rem;
+font-family: ‘Orbitron’, monospace;
+font-size: 0.65rem;
+font-weight: 700;
+cursor: pointer;
+letter-spacing: 0.08em;
+transition: all 0.2s;
+white-space: nowrap;
+}
+.search-btn:hover:not(:disabled) {
+background: rgba(0,136,255,0.2);
+box-shadow: 0 0 15px rgba(0,136,255,0.3);
+}
+.search-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.search-result {
+display: none;
+background: #ffffff;
+border-radius: 6px;
+padding: 0.9rem;
+font-size: 0.78rem;
+line-height: 1.65;
+color: #111;
+}
+.search-result.visible { display: block; }
+.opportunity-bar {
+display: none;
+align-items: center;
+gap: 0.6rem;
+padding: 0.5rem 0.8rem;
+border-radius: 5px;
+font-family: ‘Orbitron’, monospace;
+font-size: 0.7rem;
+font-weight: 700;
+margin-bottom: 0.6rem;
+border: 1px solid;
+}
+.opportunity-bar.yes { background: rgba(0,255,136,0.1); border-color: rgba(0,255,136,0.4); color: #00cc66; }
+.opportunity-bar.no  { background: rgba(255,170,0,0.08); border-color: rgba(255,170,0,0.3); color: var(–gold); }
+.opportunity-bar.visible { display: flex; }
+
 /* ── DIRECTION INDICATOR ── */
 .direction-bar {
 display: none;
@@ -517,6 +598,22 @@ const ICON_512 = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAgAAAAIACAYAAAD0
       <div class="pc-val" id="p-fias" style="color:#9944ff">—</div>
       <div class="pc-chg" id="c-fias">—</div>
     </div>
+  </div>
+
+  <!-- Coin Search -->
+
+  <div class="search-block">
+    <div class="search-title">🔎 COIN ZOEKEN — LEVERAGE KANS CHECKER</div>
+    <div class="search-row">
+      <input class="search-input" id="searchCoin" placeholder="Bijv: Bitcoin, PEPE, TAO, MON..." 
+        onkeydown="if(event.key==='Enter') searchLeverage()">
+      <button class="search-btn" id="searchBtn" onclick="searchLeverage()">ANALYSEER</button>
+    </div>
+    <div class="opportunity-bar" id="oppBar">
+      <span id="oppIcon">⚡</span>
+      <span id="oppText">—</span>
+    </div>
+    <div class="search-result" id="searchResult"></div>
   </div>
 
   <!-- API Key -->
@@ -989,6 +1086,109 @@ Max 6 zinnen. Schrijf in het Nederlands.`, ctx);
 
   btn.disabled = false;
   btn.textContent = '⚡ NIEUW SIGNAAL GENEREREN';
+}
+
+
+// ─── COIN SEARCH / LEVERAGE CHECKER ──────────────────────────
+async function searchLeverage() {
+  const apiKey = document.getElementById('apiKey').value.trim();
+  if (!apiKey) { alert('Vul eerst je Anthropic API key in!'); return; }
+
+  const query = document.getElementById('searchCoin').value.trim();
+  if (!query) { alert('Vul een coin naam in'); return; }
+
+  const lev  = selectedLev;
+  const tf   = document.getElementById('timeframe').value;
+  const risk = document.getElementById('riskProfile').value;
+  const amt  = document.getElementById('amount').value;
+
+  const btn = document.getElementById('searchBtn');
+  btn.disabled = true;
+  btn.textContent = 'ZOEKEN...';
+
+  const resultEl = document.getElementById('searchResult');
+  const oppBar   = document.getElementById('oppBar');
+  resultEl.className = 'search-result visible';
+  resultEl.innerHTML = '<div class="dots"><span></span><span></span><span></span></div>';
+  oppBar.className = 'opportunity-bar';
+
+  // Probeer live koers te vinden via CoinGecko search
+  let priceCtx = '';
+  try {
+    const searchRes = await fetchT(`https://api.coingecko.com/api/v3/search?query=${encodeURIComponent(query)}`);
+    const searchData = await searchRes.json();
+    const coin = searchData.coins?.[0];
+    if (coin) {
+      const priceRes = await fetchT(`https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${coin.id}&price_change_percentage=1h,24h`);
+      const priceData = await priceRes.json();
+      const c = priceData?.[0];
+      if (c && c.current_price) {
+        const p   = c.current_price;
+        const ch1 = (c.price_change_percentage_1h_in_currency ?? 0).toFixed(2);
+        const ch24 = (c.price_change_percentage_24h ?? 0).toFixed(2);
+        const vol = (c.total_volume ?? 0) > 1e9
+          ? '$' + (c.total_volume/1e9).toFixed(2) + 'B'
+          : '$' + (c.total_volume/1e6).toFixed(1) + 'M';
+        const pStr = p >= 1 ? p.toLocaleString('en-US') : p.toFixed(6);
+        priceCtx = `\nLIVE KOERS: $${pStr} | 1h: ${ch1}% | 24h: ${ch24}% | Vol: ${vol}`;
+      }
+    }
+  } catch(e) {}
+
+  try {
+    const result = await callClaude(
+      `Je bent de FIAS Arche Leverage Kans Checker. Beoordeel of er een leverage trade kans is voor de opgegeven coin.
+
+START je antwoord ALTIJD met één van deze twee regels:
+✅ JA — ER IS EEN LEVERAGE KANS
+❌ NEE — GEEN GOEDE LEVERAGE KANS NU
+
+Dan geef je de analyse:
+
+Als JA:
+⚡ RICHTING: [LONG / SHORT]
+💥 Aanbevolen hefboom: [Xx] (max ${lev}x)
+📍 Entry zone: [prijs]
+🎯 TP1: [prijs] ([+%]) | TP2: [prijs] ([+%])
+🛑 Stop Loss: [prijs] ([-% van entry])
+💀 Liquidatie bij ${lev}x: [prijs]
+📊 R/R: [ratio] | Kans: [%]
+⚠️ Risico: [LAAG/MEDIUM/HOOG]
+
+📈 TECHNISCHE INDICATOREN (geschat o.b.v. prijsbeweging):
+- RSI (14): [waarde + betekenis]
+- Trend (MA): [boven/onder MA50/200]
+- Volume: [stijgend/dalend/normaal]
+- Momentum: [MACD signaal]
+- Patroon: [eventueel chart patroon]
+
+💡 CONCLUSIE: [2 zinnen waarom wel/niet]
+
+Als NEE: leg in 2-3 zinnen uit waarom niet en wanneer het wél interessant wordt.
+
+Tijdframe: ${tf} | Risico: ${risk} | Kapitaal: $${amt}
+Schrijf in het Nederlands. Geen garanties.`,
+      `Coin: ${query}${priceCtx}`,
+      1500
+    );
+
+    // Check of er een kans is
+    const hasOpp = result.includes('✅');
+    const isLong = result.toUpperCase().includes('LONG');
+
+    oppBar.className = 'opportunity-bar visible ' + (hasOpp ? 'yes' : 'no');
+    document.getElementById('oppIcon').textContent = hasOpp ? (isLong ? '📈' : '📉') : '⏸️';
+    document.getElementById('oppText').textContent = hasOpp
+      ? (isLong ? `LONG KANS — ${query.toUpperCase()} ${lev}x` : `SHORT KANS — ${query.toUpperCase()} ${lev}x`)
+      : `GEEN KANS NU — ${query.toUpperCase()}`;
+
+    resultEl.innerHTML = renderMd(result);
+  } catch(e) {
+    resultEl.innerHTML = `<span style="color:#ff3355">❌ ${e.message}</span>`;
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'ANALYSEER';
 }
 
 // ─── MARKET SCANNER ───────────────────────────────────────────
