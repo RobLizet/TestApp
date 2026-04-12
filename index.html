@@ -1024,19 +1024,22 @@ async function runScan() {
     const data = await r.json();
     if (!Array.isArray(data) || data.length === 0) throw new Error('Geen data ontvangen');
 
-    priceLines = data.map(c => {
-      const p   = c.current_price;
-      const ch1 = (c.price_change_percentage_1h_in_currency ?? 0).toFixed(2);
-      const ch24 = (c.price_change_percentage_24h ?? 0).toFixed(2);
-      const vol = c.total_volume > 1e9
-        ? '$' + (c.total_volume/1e9).toFixed(2) + 'B'
-        : '$' + (c.total_volume/1e6).toFixed(1) + 'M';
-      const mcap = c.market_cap > 1e9
-        ? '$' + (c.market_cap/1e9).toFixed(1) + 'B'
-        : '$' + (c.market_cap/1e6).toFixed(0) + 'M';
-      const ath_pct = c.ath > 0 ? ((p / c.ath) * 100).toFixed(1) : '?';
-      return `${c.symbol.toUpperCase()}/USDT: $${p.toLocaleString('en-US')} | 1h: ${ch1}% | 24h: ${ch24}% | Vol: ${vol} | MCap: ${mcap} | ATH%: ${ath_pct}%`;
-    });
+    priceLines = data
+      .filter(c => c && c.current_price != null)
+      .map(c => {
+        const p   = c.current_price;
+        const ch1 = (c.price_change_percentage_1h_in_currency ?? 0).toFixed(2);
+        const ch24 = (c.price_change_percentage_24h ?? 0).toFixed(2);
+        const vol = (c.total_volume ?? 0) > 1e9
+          ? '$' + ((c.total_volume)/1e9).toFixed(2) + 'B'
+          : '$' + ((c.total_volume ?? 0)/1e6).toFixed(1) + 'M';
+        const mcap = (c.market_cap ?? 0) > 1e9
+          ? '$' + ((c.market_cap)/1e9).toFixed(1) + 'B'
+          : '$' + ((c.market_cap ?? 0)/1e6).toFixed(0) + 'M';
+        const ath_pct = (c.ath ?? 0) > 0 ? ((p / c.ath) * 100).toFixed(1) : '?';
+        const pStr = p >= 1 ? p.toLocaleString('en-US') : p.toFixed(6);
+        return `${(c.symbol||'?').toUpperCase()}/USDT: $${pStr} | 1h: ${ch1}% | 24h: ${ch24}% | Vol: ${vol} | MCap: ${mcap} | ATH%: ${ath_pct}%`;
+      });
   } catch(e) {
     fetchError = e.message;
   }
