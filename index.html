@@ -951,6 +951,185 @@ async function loadPriceStrip() {
   } catch(e) {}
 }
 
+
+// ─── TECHNISCHE ANALYSE (OHLCV + FIBONACCI + MARKET STRUCTURE) ────
+async function fetchOHLCV(coinId, days = 14) {
+  try {
+    const r = await fetchT(
+      `https://api.coingecko.com/api/v3/coins/${coinId}/ohlc?vs_currency=usd&days=${days}`,
+      8000
+    );
+    if (!r.ok) return null;
+    const data = await r.json();
+    // data = [[timestamp, open, high, low, close], ...]
+    return data;
+  } catch(e) { return null; }
+}
+
+function calcFibonacci(ohlcv) {
+  if (!ohlcv || ohlcv.length < 5) return null;
+  
+  // Zoek swing high en swing low over hele periode
+  let swingHigh = -Infinity, swingLow = Infinity;
+  ohlcv.forEach(c => {
+    if (c[2] > swingHigh) swingHigh = c[2]; // high
+    if (c[3] < swingLow)  swingLow  = c[3]; // low
+  });
+  
+  const diff = swingHigh - swingLow;
+  const lastClose = ohlcv[ohlcv.length - 1][4];
+  const trend = lastClose > (swingHigh + swingLow) / 2 ? 'bullish' : 'bearish';
+  
+  // Fibonacci retracement levels (van high naar low voor bearish, low naar high voor bullish)
+  const levels = {
+    '0.0':   swingHigh,
+    '0.236': swingHigh - diff * 0.236,
+    '0.382': swingHigh - diff * 0.382,
+    '0.5':   swingHigh - diff * 0.5,
+    '0.618': swingHigh - diff * 0.618,
+    '0.786': swingHigh - diff * 0.786,
+    '1.0':   swingLow,
+    // Extensions
+    '1.272': swingLow - diff * 0.272,
+    '1.618': swingLow - diff * 0.618,
+  };
+
+  // Vind dichtstbijzijnde support/resistance
+  const levArray = Object.entries(levels).map(([k, v]) => ({ name: k, price: v }));
+  const nearSupport = levArray.filter(l => l.price <= lastClose).sort((a,b) => b.price - a.price)[0];
+  const nearResist  = levArray.filter(l => l.price >= lastClose).sort((a,b) => a.price - b.price)[0];
+
+  return { swingHigh, swingLow, levels, lastClose, trend, nearSupport, nearResist, diff };
+}
+
+function calcMarketStructure(ohlcv) {
+  if (!ohlcv || ohlcv.length < 10) return null;
+
+  const closes = ohlcv.map(c => c[4]);
+  const highs  = ohlcv.map(c => c[2]);
+  const lows   = ohlcv.map(c => c[3]);
+  const n = closes.length;
+
+  // Detecteer swing highs en lows (lokale maxima/minima)
+  const swingHighs = [], swingLows = [];
+  for (let i = 2; i < n - 2; i++) {
+    if (highs[i] > highs[i-1] && highs[i] > highs[i-2] && highs[i] > highs[i+1] && highs[i] > highs[i+2]) {
+      swingHighs.push({ i, price: highs[i] });
+    }
+    if (lows[i] < lows[i-1] && lows[i] < lows[i-2] && lows[i] < lows[i+1] && lows[i] < lows[i+2]) {
+      swingLows.push({ i, price: lows[i] });
+    }
+  }
+
+  // Market structure bepalen
+  let structure = 'SIDEWAYS';
+  let bos = null, choch = null;
+
+  if (swingHighs.length >= 2 && swingLows.length >= 2) {
+    const lastHH = swingHighs[swingHighs.length - 1];
+    const prevHH = swingHighs[swingHighs.length - 2];
+    const lastLL = swingLows[swingLows.length - 1];
+    const prevLL = swingLows[swingLows.length - 2];
+
+    const isHH = lastHH.price > prevHH.price; // Higher High
+    const isHL = lastLL.price > prevLL.price; // Higher Low
+    const isLH = lastHH.price < prevHH.price; // Lower High
+    const isLL = lastLL.price < prevLL.price; // Lower Low
+
+    if (isHH && isHL) structure = 'BULLISH (HH+HL)';
+    else if (isLH && isLL) structure = 'BEARISH (LH+LL)';
+    else if (isHH && isLL) structure = 'MIXED — mogelijke omkering';
+    else if (isLH && isHL) structure = 'CONSOLIDATIE';
+
+    // Break of Structure
+    const lastClose = closes[n - 1];
+    if (lastClose > lastHH.price) bos = `BOS BOVEN $${lastHH.price.toFixed(2)} — bullish doorbraak`;
+    if (lastClose < lastLL.price) bos = `BOS ONDER $${lastLL.price.toFixed(2)} — bearish doorbraak`;
+
+    // Change of Character (eerste teken van omkering)
+    const recentBearish = structure.includes('BEARISH');
+    const recentBullish = structure.includes('BULLISH');
+    if (recentBearish && isHL) choch = 'CHoCH signaal — hogere bodem na downtrend (mogelijke omkering)';
+    if (recentBullish && isLH) choch = 'CHoCH signaal — lagere top na uptrend (mogelijke omkering)';
+  }
+
+  // RSI berekenen (14 periodes)
+  const rsi = calcRSI(closes, 14);
+
+  // EMA berekening
+  const ema20 = calcEMA(closes, 20);
+  const ema50 = calcEMA(closes, 50);
+  const lastClose = closes[n - 1];
+  const emaSignal = ema20 && ema50
+    ? (ema20 > ema50 ? 'EMA20 boven EMA50 (bullish)' : 'EMA20 onder EMA50 (bearish)')
+    : 'onvoldoende data';
+
+  return {
+    structure, bos, choch,
+    swingHighs: swingHighs.slice(-3),
+    swingLows:  swingLows.slice(-3),
+    rsi: rsi ? rsi.toFixed(1) : null,
+    rsiSignal: rsi ? (rsi > 70 ? 'overbought' : rsi < 30 ? 'oversold' : rsi > 55 ? 'bullish zone' : rsi < 45 ? 'bearish zone' : 'neutraal') : null,
+    ema20: ema20?.toFixed(2), ema50: ema50?.toFixed(2), emaSignal,
+    lastClose
+  };
+}
+
+function calcRSI(closes, period = 14) {
+  if (closes.length < period + 1) return null;
+  let gains = 0, losses = 0;
+  for (let i = 1; i <= period; i++) {
+    const diff = closes[i] - closes[i - 1];
+    if (diff > 0) gains += diff; else losses -= diff;
+  }
+  let avgGain = gains / period, avgLoss = losses / period;
+  for (let i = period + 1; i < closes.length; i++) {
+    const diff = closes[i] - closes[i - 1];
+    avgGain = (avgGain * (period - 1) + Math.max(diff, 0)) / period;
+    avgLoss = (avgLoss * (period - 1) + Math.max(-diff, 0)) / period;
+  }
+  if (avgLoss === 0) return 100;
+  return 100 - (100 / (1 + avgGain / avgLoss));
+}
+
+function calcEMA(closes, period) {
+  if (closes.length < period) return null;
+  const k = 2 / (period + 1);
+  let ema = closes.slice(0, period).reduce((a, b) => a + b, 0) / period;
+  for (let i = period; i < closes.length; i++) {
+    ema = closes[i] * k + ema * (1 - k);
+  }
+  return ema;
+}
+
+function formatTechContext(fib, ms) {
+  if (!fib && !ms) return '';
+  let ctx = '\n\n=== TECHNISCHE ANALYSE ===';
+
+  if (ms) {
+    ctx += `\nMarket Structure: ${ms.structure}`;
+    if (ms.bos)   ctx += `\n${ms.bos}`;
+    if (ms.choch) ctx += `\n${ms.choch}`;
+    if (ms.rsi)   ctx += `\nRSI(14): ${ms.rsi} — ${ms.rsiSignal}`;
+    ctx += `\n${ms.emaSignal}`;
+    if (ms.swingHighs.length) ctx += `\nLaatste swing highs: ${ms.swingHighs.map(h => '$'+h.price.toFixed(2)).join(', ')}`;
+    if (ms.swingLows.length)  ctx += `\nLaatste swing lows: ${ms.swingLows.map(l => '$'+l.price.toFixed(2)).join(', ')}`;
+  }
+
+  if (fib) {
+    const fmt = v => v >= 1 ? '$' + v.toLocaleString('en-US', {maximumFractionDigits: 2}) : '$' + v.toFixed(6);
+    ctx += `\n\nFibonacci (${fib.trend}):`;
+    ctx += `\nSwing High: ${fmt(fib.swingHigh)} | Swing Low: ${fmt(fib.swingLow)}`;
+    ctx += `\n0.236: ${fmt(fib.levels['0.236'])} | 0.382: ${fmt(fib.levels['0.382'])} | 0.5: ${fmt(fib.levels['0.5'])}`;
+    ctx += `\n0.618: ${fmt(fib.levels['0.618'])} | 0.786: ${fmt(fib.levels['0.786'])}`;
+    ctx += `\nExt 1.272: ${fmt(fib.levels['1.272'])} | Ext 1.618: ${fmt(fib.levels['1.618'])}`;
+    if (fib.nearSupport) ctx += `\nDichtstbijzijnde support: Fib ${fib.nearSupport.name} = ${fmt(fib.nearSupport.price)}`;
+    if (fib.nearResist)  ctx += `\nDichtstbijzijnde resistance: Fib ${fib.nearResist.name} = ${fmt(fib.nearResist.price)}`;
+  }
+
+  return ctx;
+}
+
 // ─── MAIN ANALYSIS ────────────────────────────────────────────
 async function runAnalysis() {
   const apiKey = document.getElementById('apiKey').value.trim();
@@ -987,7 +1166,7 @@ async function runAnalysis() {
     priceCtx = ` | LIVE: $${p.toLocaleString('en-US')} | 24h: ${ch}% | Vol: ${vol}`;
   }
 
-  const ctx = `Coin: ${coin} | Tijdframe: ${tf} | Risico: ${risk} | Kapitaal: $${amt} | Hefboom: ${lev}x${priceCtx}`;
+  const ctx = `Coin: ${coin} | Tijdframe: ${tf} | Risico: ${risk} | Kapitaal: $${amt} | Hefboom: ${lev}x${priceCtx}${techCtx}`;
   const disc = 'Uitsluitend educatief. Gebruik de live koers. Geen garanties. Wees realistisch over leverage risico\'s.';
 
   btn.textContent = '⚡ ENTITIES ACTIEF...';
@@ -1114,11 +1293,13 @@ async function searchLeverage() {
 
   // Probeer live koers te vinden via CoinGecko search
   let priceCtx = '';
+  let foundCoinId = null;
   try {
     const searchRes = await fetchT(`https://api.coingecko.com/api/v3/search?query=${encodeURIComponent(query)}`);
     const searchData = await searchRes.json();
     const coin = searchData.coins?.[0];
     if (coin) {
+      foundCoinId = coin.id;
       const priceRes = await fetchT(`https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${coin.id}&price_change_percentage=1h,24h`);
       const priceData = await priceRes.json();
       const c = priceData?.[0];
@@ -1134,6 +1315,19 @@ async function searchLeverage() {
       }
     }
   } catch(e) {}
+
+  // OHLCV + Fibonacci + Market Structure voor zoekopdracht
+  let searchTechCtx = '';
+  if (foundCoinId) {
+    try {
+      const ohlcv = await fetchOHLCV(foundCoinId, 14);
+      if (ohlcv && ohlcv.length > 5) {
+        const fib = calcFibonacci(ohlcv);
+        const ms  = calcMarketStructure(ohlcv);
+        searchTechCtx = formatTechContext(fib, ms);
+      }
+    } catch(e) {}
+  }
 
   try {
     const result = await callClaude(
@@ -1168,7 +1362,7 @@ Als NEE: leg in 2-3 zinnen uit waarom niet en wanneer het wél interessant wordt
 
 Tijdframe: ${tf} | Risico: ${risk} | Kapitaal: $${amt}
 Schrijf in het Nederlands. Geen garanties.`,
-      `Coin: ${query}${priceCtx}`,
+      `Coin: ${query}${priceCtx}${searchTechCtx}`,
       1500
     );
 
