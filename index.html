@@ -1003,54 +1003,82 @@ async function runScan() {
 
   const scanBtn = document.getElementById('scanBtn');
   scanBtn.disabled = true;
-  scanBtn.textContent = '🔍 MARKT SCANNEN...';
+  scanBtn.textContent = '🔍 KOERSEN OPHALEN...';
 
   const scanSec = document.getElementById('scanSection');
   scanSec.style.display = 'block';
   document.getElementById('scanBody').innerHTML =
     '<div class="dots"><span></span><span></span><span></span></div>';
 
-  // Top 12 coins ophalen parallel
-  const topCoins = FUTURES_COINS.slice(0, 12);
-  scanBtn.textContent = '🔍 KOERSEN LADEN...';
-
-  const ids = topCoins
-    .map(c => COIN_IDS[c])
-    .filter(Boolean).join(',');
+  // Top 15 coins ophalen via CoinGecko markets endpoint
+  const topCoins = FUTURES_COINS.slice(0, 15);
+  const ids = topCoins.map(c => COIN_IDS[c]).filter(Boolean).join(',');
 
   let priceLines = [];
+  let fetchError = null;
+
   try {
-    const r = await fetchT(`https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${ids}&price_change_percentage=24h`);
+    const url = `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${ids}&order=market_cap_desc&per_page=20&page=1&sparkline=false&price_change_percentage=1h%2C24h`;
+    const r = await fetchT(url, 8000);
+    if (!r.ok) throw new Error('HTTP ' + r.status);
     const data = await r.json();
+    if (!Array.isArray(data) || data.length === 0) throw new Error('Geen data ontvangen');
+
     priceLines = data.map(c => {
-      const p  = c.current_price;
-      const ch = c.price_change_percentage_24h?.toFixed(2);
+      const p   = c.current_price;
+      const ch1 = (c.price_change_percentage_1h_in_currency ?? 0).toFixed(2);
+      const ch24 = (c.price_change_percentage_24h ?? 0).toFixed(2);
       const vol = c.total_volume > 1e9
         ? '$' + (c.total_volume/1e9).toFixed(2) + 'B'
         : '$' + (c.total_volume/1e6).toFixed(1) + 'M';
-      return `${c.symbol?.toUpperCase()}: $${p.toLocaleString('en-US')} | 24h: ${ch}% | Vol: ${vol}`;
+      const mcap = c.market_cap > 1e9
+        ? '$' + (c.market_cap/1e9).toFixed(1) + 'B'
+        : '$' + (c.market_cap/1e6).toFixed(0) + 'M';
+      const ath_pct = c.ath > 0 ? ((p / c.ath) * 100).toFixed(1) : '?';
+      return `${c.symbol.toUpperCase()}/USDT: $${p.toLocaleString('en-US')} | 1h: ${ch1}% | 24h: ${ch24}% | Vol: ${vol} | MCap: ${mcap} | ATH%: ${ath_pct}%`;
     });
-  } catch(e) {}
+  } catch(e) {
+    fetchError = e.message;
+  }
 
-  scanBtn.textContent = '🔍 AI ANALYSEERT...';
+  if (priceLines.length === 0) {
+    document.getElementById('scanBody').innerHTML =
+      `<span style="color:#ff3355">❌ Koersen ophalen mislukt: ${fetchError || 'onbekende fout'}.<br>Controleer je internetverbinding en probeer opnieuw.</span>`;
+    scanBtn.disabled = false;
+    scanBtn.textContent = '🔍 SCAN MARKT OP LEVERAGE KANSEN';
+    return;
+  }
+
+  scanBtn.textContent = `🔍 ${priceLines.length} COINS ANALYSEREN...`;
+
+  const marktData = `=== LIVE MARKTDATA (${new Date().toLocaleTimeString('nl-NL')}) ===
+Tijdframe: ${tf} | Risico: ${risk} | Kapitaal: $${amt} | Max hefboom: ${lev}x
+
+${priceLines.join('\n')}`;
 
   try {
     const result = await callClaude(
-      `Je bent de FIAS Arche Leverage Scanner. Analyseer de marktdata en identificeer de TOP 3 beste leverage kansen op Futures Analyse.
-Criteria: momentum, volume, volatiliteit, trend richting, risk/reward.
-Tijdframe: ${tf} | Risico: ${risk} | Kapitaal: $${amt} | Hefboom: max ${lev}x
+      `Je bent de FIAS Arche Leverage Scanner. Je analyseert live marktdata en geeft concrete LONG én SHORT leverage kansen.
+
+BELANGRIJK: Je HEBT de marktdata hieronder. Gebruik die direct voor je analyse.
+Zoek naar zowel LONG kansen (opwaartse trend, bullish signalen) als SHORT kansen (neerwaartse trend, bearish signalen).
+
+Geef TOP 3 kansen — mix van LONG en SHORT op basis van de data.
+Tijdframe: ${tf} | Risicoprofiel: ${risk} | Kapitaal: $${amt} | Max hefboom: ${lev}x
 
 Gebruik EXACT dit format per kans:
 
-🥇/🥈/🥉 [COIN] — [LONG / SHORT] [Xx hefboom]
-📊 Reden: [1 zin waarom dit de beste kans is]
-📍 Entry: [prijsniveau] | 🎯 TP: [doel] | 🛑 SL: [niveau]
-💀 Liquidatie bij ${lev}x: [prijs]
-⚠️ Risico: [LAAG/MEDIUM/HOOG] | Kans: [%]
+🥇/🥈/🥉 [COIN/USDT] — 📈 LONG [Xx] / 📉 SHORT [Xx]
+📊 Signaal: [waarom LONG of SHORT op basis van de prijsdata]
+📍 Entry: $[prijs] | 🎯 TP1: $[doel] (+[%]) | TP2: $[doel] (+[%])
+🛑 Stop Loss: $[prijs] (-[%]) | 💀 Liquidatie bij ${lev}x: $[prijs]
+💰 Positiegrootte: $[bedrag van $${amt}] | 📊 R/R: [ratio] | Kans: [%]
+⚠️ Risico: [LAAG/MEDIUM/HOOG]
 
-Sluit af met 1 zin marktsentiment. Schrijf in het Nederlands. Geen garanties.`,
-      '=== FUTURES ANALYSE MARKTDATA ===\n' + priceLines.join('\n'),
-      1500
+Sluit af met 1 regel: algemeen marktsentiment (bull/bear/sideways).
+Schrijf in het Nederlands. Gebruik de exacte prijzen uit de data.`,
+      marktData,
+      1800
     );
 
     document.getElementById('scanBody').innerHTML = renderMd(result);
