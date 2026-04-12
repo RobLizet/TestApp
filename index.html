@@ -485,7 +485,7 @@ const ICON_512 = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAgAAAAIACAYAAAD0
     </div>
     <div class="header-right">
       <div class="fias-badge">⬡ FIAS v0.1</div>
-      <div class="mexc-badge">⚡ MEXC FUTURES</div>
+      <div class="mexc-badge">⚡ FUTURES ANALYSE</div>
     </div>
   </div>
 
@@ -537,7 +537,7 @@ const ICON_512 = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAgAAAAIACAYAAAD0
 
   <div class="inputs-grid">
     <div class="input-block">
-      <span class="field-label">Coin (MEXC Futures)</span>
+      <span class="field-label">Coin (Futures Analyse)</span>
       <select id="coinSelect"></select>
     </div>
     <div class="input-block">
@@ -590,7 +590,7 @@ const ICON_512 = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAgAAAAIACAYAAAD0
     <div class="entity-chip" id="chip-structure"><span class="led"></span>MARKET STRUCTURE</div>
     <div class="entity-chip" id="chip-signal"><span class="led"></span>LEVERAGE SIGNAL</div>
     <div class="entity-chip" id="chip-risk"><span class="led"></span>RISK CALCULATOR</div>
-    <div class="entity-chip" id="chip-execute"><span class="led"></span>MEXC EXECUTOR</div>
+    <div class="entity-chip" id="chip-execute"><span class="led"></span>TRADE EXECUTOR</div>
   </div>
 
   <!-- Main buttons -->
@@ -599,7 +599,7 @@ const ICON_512 = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAgAAAAIACAYAAAD0
     ⚡ GENEREER LEVERAGE SIGNAAL
   </button>
   <button class="main-btn scan-btn" id="scanBtn" onclick="runScan()">
-    🔍 SCAN MEXC OP LEVERAGE KANSEN
+    🔍 SCAN MARKT OP LEVERAGE KANSEN
   </button>
 
   <!-- Disclaimer -->
@@ -614,7 +614,7 @@ const ICON_512 = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAgAAAAIACAYAAAD0
   <div class="scan-section" id="scanSection">
     <div class="result-card">
       <div class="card-head">
-        <span class="ctag ctag-signal">🔍 MEXC MARKET SCANNER</span>
+        <span class="ctag ctag-signal">🔍 LEVERAGE MARKET SCANNER</span>
         <span class="card-title">Top Leverage Kansen</span>
         <span id="scanTime" style="font-family:'Share Tech Mono',monospace;font-size:0.52rem;color:var(--muted)"></span>
       </div>
@@ -664,8 +664,8 @@ const ICON_512 = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAgAAAAIACAYAAAD0
 
 <div class="result-card" style="animation-delay:0.3s">
   <div class="card-head">
-    <span class="ctag ctag-execute">ENTITY 04 · MEXC EXECUTOR</span>
-    <span class="card-title">MEXC Uitvoering</span>
+    <span class="ctag ctag-execute">ENTITY 04 · TRADE EXECUTOR</span>
+    <span class="card-title">Trade Uitvoering</span>
     <span class="fias-chip">⬡ 0.0021 FIAS</span>
   </div>
   <div class="card-body" id="body-execute">
@@ -678,8 +678,8 @@ const ICON_512 = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAgAAAAIACAYAAAD0
 </div>
 
 <script>
-// ─── MEXC FUTURES COINS ───────────────────────────────────────
-const MEXC_COINS = [
+// ─── FUTURES ANALYSE COINS ───────────────────────────────────────
+const FUTURES_COINS = [
   'Bitcoin (BTC)','Ethereum (ETH)','Solana (SOL)','BNB (BNB)',
   'XRP (XRP)','Dogecoin (DOGE)','Cardano (ADA)','Avalanche (AVAX)',
   'Chainlink (LINK)','Polkadot (DOT)','Litecoin (LTC)','Polygon (MATIC)',
@@ -914,7 +914,7 @@ Schrijf in het Nederlands, max 4 zinnen, geen bullet points.`, ctx);
   setChip('signal', 'running');
   try {
     const res = await callClaude(
-      `Je bent een FIAS Arche leverage signaal generator voor MEXC Futures. ${disc}
+      `Je bent een FIAS Arche leverage signaal generator voor Futures Analyse. ${disc}
 Genereer een concreet leverage signaal. Gebruik EXACT dit format:
 
 ⚡ RICHTING: [LONG / SHORT]
@@ -948,7 +948,7 @@ Schrijf in het Nederlands. Gebruik de live koers als basis.`, ctx);
   setChip('risk', 'running');
   try {
     const res = await callClaude(
-      `Je bent een FIAS Arche risico calculator voor MEXC leverage trading. ${disc}
+      `Je bent een FIAS Arche risico calculator voor leverage trading. ${disc}
 Bereken en beoordeel alle risico's voor deze ${lev}x leverage trade.
 
 Gebruik dit format:
@@ -968,15 +968,15 @@ Schrijf in het Nederlands.`, ctx);
     setChip('risk', 'done');
   } catch(e) { showError('risk', e.message); }
 
-  // ENTITY 04: MEXC Executor
+  // ENTITY 04: Trade Executor
   setChip('execute', 'running');
   try {
     const res = await callClaude(
-      `Je bent een FIAS Arche MEXC uitvoeringsadviseur. ${disc}
-Geef stap-voor-stap instructies voor het uitvoeren van deze ${lev}x leverage trade op MEXC Futures.
+      `Je bent een FIAS Arche trade uitvoeringsadviseur. ${disc}
+Geef stap-voor-stap instructies voor het uitvoeren van deze ${lev}x leverage trade op Futures Analyse.
 
 Bespreek:
-1. Hoe de futures positie openen op MEXC (Cross/Isolated margin)
+1. Hoe de futures positie openen op je exchange (Cross/Isolated margin)
 2. Exacte hefboom instelling (${lev}x) en waarom
 3. Hoe stop loss instellen (TP/SL orders)
 4. Wanneer bijschalen of afbouwen
@@ -1003,7 +1003,7 @@ async function runScan() {
 
   const scanBtn = document.getElementById('scanBtn');
   scanBtn.disabled = true;
-  scanBtn.textContent = '🔍 MEXC SCANNEN...';
+  scanBtn.textContent = '🔍 MARKT SCANNEN...';
 
   const scanSec = document.getElementById('scanSection');
   scanSec.style.display = 'block';
@@ -1011,7 +1011,7 @@ async function runScan() {
     '<div class="dots"><span></span><span></span><span></span></div>';
 
   // Top 12 coins ophalen parallel
-  const topCoins = MEXC_COINS.slice(0, 12);
+  const topCoins = FUTURES_COINS.slice(0, 12);
   scanBtn.textContent = '🔍 KOERSEN LADEN...';
 
   const ids = topCoins
@@ -1036,7 +1036,7 @@ async function runScan() {
 
   try {
     const result = await callClaude(
-      `Je bent de FIAS Arche MEXC Leverage Scanner. Analyseer de marktdata en identificeer de TOP 3 beste leverage kansen op MEXC Futures.
+      `Je bent de FIAS Arche Leverage Scanner. Analyseer de marktdata en identificeer de TOP 3 beste leverage kansen op Futures Analyse.
 Criteria: momentum, volume, volatiliteit, trend richting, risk/reward.
 Tijdframe: ${tf} | Risico: ${risk} | Kapitaal: $${amt} | Hefboom: max ${lev}x
 
@@ -1049,7 +1049,7 @@ Gebruik EXACT dit format per kans:
 ⚠️ Risico: [LAAG/MEDIUM/HOOG] | Kans: [%]
 
 Sluit af met 1 zin marktsentiment. Schrijf in het Nederlands. Geen garanties.`,
-      '=== MEXC FUTURES MARKTDATA ===\n' + priceLines.join('\n'),
+      '=== FUTURES ANALYSE MARKTDATA ===\n' + priceLines.join('\n'),
       1500
     );
 
@@ -1062,7 +1062,7 @@ Sluit af met 1 zin marktsentiment. Schrijf in het Nederlands. Geen garanties.`,
   }
 
   scanBtn.disabled = false;
-  scanBtn.textContent = '🔍 SCAN MEXC OP LEVERAGE KANSEN';
+  scanBtn.textContent = '🔍 SCAN MARKT OP LEVERAGE KANSEN';
 }
 
 // ─── INIT ─────────────────────────────────────────────────────
@@ -1073,7 +1073,7 @@ Sluit af met 1 zin marktsentiment. Schrijf in het Nederlands. Geen garanties.`,
 
   // Coin dropdown vullen
   const sel = document.getElementById('coinSelect');
-  sel.innerHTML = MEXC_COINS.map(c =>
+  sel.innerHTML = FUTURES_COINS.map(c =>
     `<option value="${c}">${c}</option>`
   ).join('');
 
