@@ -1010,15 +1010,28 @@ async function runScan() {
   document.getElementById('scanBody').innerHTML =
     '<div class="dots"><span></span><span></span><span></span></div>';
 
-  // Top 15 coins ophalen via CoinGecko markets endpoint
-  const topCoins = FUTURES_COINS.slice(0, 15);
-  const ids = topCoins.map(c => COIN_IDS[c]).filter(Boolean).join(',');
+  // Alle coins ophalen via CoinGecko (2 batches van 30)
+  const allScanIds1 = [
+    'bitcoin','ethereum','solana','binancecoin','ripple','dogecoin',
+    'cardano','avalanche-2','chainlink','polkadot','litecoin','matic-network',
+    'pepe','shiba-inu','sui','the-open-network','uniswap','aptos',
+    'near','injective-protocol','arbitrum','optimism','sei-network',
+    'render-token','fetch-ai','celestia','jupiter-exchange-solana',
+    'bonk','dogwifcoin','notcoin'
+  ];
+  const allScanIds2 = [
+    'floki','bittensor','monad','devve','hedera-hashgraph','internet-computer','filecoin','stacks',
+    'immutable-x','the-sandbox','decentraland','axie-infinity','gala',
+    'blur','compound-governance-token','aave','curve-dao-token','maker',
+    'synthetix-network-token','1inch','dydx','gmx','hyperliquid'
+  ];
+  const ids = [...allScanIds1, ...allScanIds2].join(',');
 
   let priceLines = [];
   let fetchError = null;
 
   try {
-    const url = `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${ids}&order=market_cap_desc&per_page=20&page=1&sparkline=false&price_change_percentage=1h%2C24h`;
+    const url = `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${ids}&order=market_cap_desc&per_page=50&page=1&sparkline=false&price_change_percentage=1h%2C24h`;
     const r = await fetchT(url, 8000);
     if (!r.ok) throw new Error('HTTP ' + r.status);
     const data = await r.json();
@@ -1081,7 +1094,7 @@ Gebruik EXACT dit format per kans:
 Sluit af met 1 regel: algemeen marktsentiment (bull/bear/sideways).
 Schrijf in het Nederlands. Gebruik de exacte prijzen uit de data.`,
       marktData,
-      1800
+      2000
     );
 
     document.getElementById('scanBody').innerHTML = renderMd(result);
