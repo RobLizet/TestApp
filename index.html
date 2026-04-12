@@ -425,25 +425,6 @@
     <div class="input-group">
       <span class="input-label">Coin</span>
       <select id="coinSelect">
-        <option value="Bitcoin (BTC)">Bitcoin (BTC)</option>
-        <option value="Ethereum (ETH)">Ethereum (ETH)</option>
-        <option value="Solana (SOL)">Solana (SOL)</option>
-        <option value="BNB (BNB)">BNB (BNB)</option>
-        <option value="XRP (XRP)">XRP (XRP)</option>
-        <option value="Dogecoin (DOGE)">Dogecoin (DOGE)</option>
-        <option value="Toncoin (TON)">Toncoin (TON)</option>
-        <option value="Chainlink (LINK)">Chainlink (LINK)</option>
-        <option value="Polkadot (DOT)">Polkadot (DOT)</option>
-        <option value="Uniswap (UNI)">Uniswap (UNI)</option>
-        <option value="Litecoin (LTC)">Litecoin (LTC)</option>
-        <option value="Polygon (MATIC)">Polygon (MATIC)</option>
-        <option value="Pepe (PEPE)">Pepe (PEPE)</option>
-        <option value="Shiba Inu (SHIB)">Shiba Inu (SHIB)</option>
-        <option value="Sui (SUI)">Sui (SUI)</option>
-        <option value="Cardano (ADA)">Cardano (ADA)</option>
-        <option value="Avalanche (AVAX)">Avalanche (AVAX)</option>
-        <option value="FIAS (FIAS)">⬡ FIAS (FIAS)</option>
-        <option value="DevvE (DevvE)">⬡ DevvE (DevvE)</option>
       </select>
     </div>
     <div class="input-group">
@@ -638,6 +619,7 @@ function toggleLeverage() {
 window.addEventListener('DOMContentLoaded', () => {
   const saved = localStorage.getItem('signals_apikey');
   if (saved) document.getElementById('apiKey').value = saved;
+  updateCoinDropdown();
 });
 
 function toggleKey() {
@@ -727,10 +709,20 @@ function dismissInstall() {
 window.addEventListener('appinstalled', () => document.getElementById('installBanner').classList.remove('show'));
 
 // ─── FIAS ECOSYSTEM PRICES ────────────────────────────────────
+async function fetchWithTimeout(url, ms = 6000) {
+  const ctrl = new AbortController();
+  const id = setTimeout(() => ctrl.abort(), ms);
+  try {
+    const res = await fetch(url, { signal: ctrl.signal });
+    clearTimeout(id);
+    return res;
+  } catch(e) { clearTimeout(id); throw e; }
+}
+
 async function loadFiasEcosystem() {
   // DevvE via CoinGecko
   try {
-    const res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=devve&vs_currencies=usd&include_24hr_change=true');
+    const res = await fetchWithTimeout('https://api.coingecko.com/api/v3/simple/price?ids=devve&vs_currencies=usd&include_24hr_change=true');
     const data = await res.json();
     if (data.devve) {
       const p = data.devve.usd;
@@ -739,12 +731,18 @@ async function loadFiasEcosystem() {
       const chEl = document.getElementById('s-devveChange');
       chEl.textContent = (ch >= 0 ? '▲ +' : '▼ ') + ch.toFixed(2) + '%';
       chEl.style.color = ch >= 0 ? 'var(--green)' : 'var(--red)';
+    } else {
+      document.getElementById('s-devvePrice').textContent = 'n/a';
+      document.getElementById('s-devveChange').textContent = '—';
     }
-  } catch(e) {}
+  } catch(e) {
+    document.getElementById('s-devvePrice').textContent = 'n/a';
+    document.getElementById('s-devveChange').textContent = '—';
+  }
 
   // FIAS via DexScreener
   try {
-    const res = await fetch('https://api.dexscreener.com/latest/dex/tokens/0x21e88f4482cd48deab1ca5eddabdfb14cb8ad76f');
+    const res = await fetchWithTimeout('https://api.dexscreener.com/latest/dex/tokens/0x21e88f4482cd48deab1ca5eddabdfb14cb8ad76f');
     const data = await res.json();
     const pair = data.pairs?.[0];
     if (pair) {
@@ -753,7 +751,6 @@ async function loadFiasEcosystem() {
       const fiasEl = document.getElementById('s-fiasPrice');
       fiasEl.textContent = '⬡ $' + (p < 0.01 ? p.toFixed(6) : p.toFixed(4));
       fiasEl.style.color = '#9966ff';
-      // change indicator
       let chEl = document.getElementById('s-fiasChange');
       if (!chEl) {
         chEl = document.createElement('div');
@@ -764,9 +761,11 @@ async function loadFiasEcosystem() {
       }
       chEl.textContent = (ch >= 0 ? '▲ +' : '▼ ') + ch.toFixed(2) + '%';
       chEl.style.color = ch >= 0 ? 'var(--green)' : 'var(--red)';
+    } else {
+      document.getElementById('s-fiasPrice').textContent = '⬡ n/a';
     }
   } catch(e) {
-    document.getElementById('s-fiasPrice').textContent = '⬡ —';
+    document.getElementById('s-fiasPrice').textContent = '⬡ n/a';
   }
 }
 loadFiasEcosystem();
@@ -817,7 +816,7 @@ async function fetchLivePrice(coin) {
   if (id.startsWith('dexscreener:')) {
     const contract = id.split(':')[1];
     try {
-      const res = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${contract}`);
+      const res = await fetchWithTimeout(`https://api.dexscreener.com/latest/dex/tokens/${contract}`);
       const data = await res.json();
       const pair = data.pairs?.[0];
       if (pair) return {
@@ -832,7 +831,7 @@ async function fetchLivePrice(coin) {
 
   // CoinGecko voor de rest
   try {
-    const res = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${id}&vs_currencies=usd&include_24hr_change=true&include_24hr_vol=true&include_market_cap=true`);
+    const res = await fetchWithTimeout(`https://api.coingecko.com/api/v3/simple/price?ids=${id}&vs_currencies=usd&include_24hr_change=true&include_24hr_vol=true&include_market_cap=true`);
     const data = await res.json();
     if (data[id]) return data[id];
   } catch(e) {}
