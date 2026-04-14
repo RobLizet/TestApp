@@ -172,58 +172,101 @@ margin-top: 1px;
 /* ── API KEY ── */
 .api-block {
 background: var(–card);
-border: 1px solid var(–border);
-border-radius: 8px;
-padding: 0.9rem 1rem;
+border: 2px solid rgba(153,68,255,0.45);
+border-radius: 10px;
+padding: 1rem 1.2rem 1.1rem;
 margin-bottom: 1rem;
+box-shadow: 0 0 20px rgba(153,68,255,0.09);
+}
+.api-block-header {
+display: flex;
+align-items: center;
+gap: 0.6rem;
+margin-bottom: 0.8rem;
+padding-bottom: 0.6rem;
+border-bottom: 1px solid rgba(153,68,255,0.2);
+}
+.api-block-title {
+font-family: 'Orbitron', monospace;
+font-size: 0.62rem;
+font-weight: 700;
+color: var(–purple);
+letter-spacing: 0.14em;
 }
 .field-label {
-font-family: ‘Share Tech Mono’, monospace;
-font-size: 0.55rem;
-color: var(–muted);
-letter-spacing: 0.12em;
+font-family: 'Share Tech Mono', monospace;
+font-size: 0.58rem;
+color: rgba(153,68,255,0.8);
+letter-spacing: 0.1em;
 text-transform: uppercase;
-margin-bottom: 0.4rem;
+margin-bottom: 0.45rem;
 display: block;
 }
-.key-row { display: flex; gap: 0.5rem; align-items: center; }
+.key-row {
+display: flex;
+gap: 0.5rem;
+align-items: center;
+background: rgba(153,68,255,0.06);
+border: 1px solid rgba(153,68,255,0.3);
+border-radius: 6px;
+padding: 0.55rem 0.8rem;
+}
 .key-row input {
 flex: 1; background: transparent; border: none;
 color: var(–text); font-family: ‘Share Tech Mono’, monospace;
-font-size: 0.8rem; outline: none;
+font-size: 0.85rem; outline: none;
 }
 .key-row input::placeholder { color: var(–muted); }
 .icon-btn {
-background: transparent; border: 1px solid var(–border);
-color: var(–muted); border-radius: 4px; padding: 4px 8px;
-cursor: pointer; font-size: 0.75rem;
+background: transparent; border: 1px solid rgba(153,68,255,0.35);
+color: var(–purple); border-radius: 4px; padding: 5px 10px;
+cursor: pointer; font-size: 0.8rem; transition: all 0.15s;
 }
-.icon-btn:hover { border-color: var(–red); color: var(–red); }
+.icon-btn:hover { border-color: var(–purple); background: rgba(153,68,255,0.15); }
 .key-hint {
-font-family: ‘Share Tech Mono’, monospace;
-font-size: 0.5rem; color: var(–muted);
-margin-top: 5px; display: block;
+font-family: 'Share Tech Mono', monospace;
+font-size: 0.52rem; color: var(–muted);
+margin-top: 8px; display: block;
 }
-.key-hint a { color: var(–blue); }
+.key-hint a { color: var(–purple); }
 
 /* ── INPUTS GRID ── */
 .inputs-grid {
 display: grid;
 grid-template-columns: 1fr 1fr;
-gap: 0.7rem;
-margin-bottom: 0.7rem;
+gap: 0.75rem;
+margin-bottom: 0.75rem;
 }
 .input-block {
 background: var(–card);
-border: 1px solid var(–border);
-border-radius: 8px;
+border: 1px solid rgba(255,255,255,0.09);
+border-radius: 9px;
 padding: 0.8rem 1rem;
+transition: border-color 0.2s, box-shadow 0.2s;
+}
+.input-block:hover {
+border-color: rgba(255,51,85,0.4);
+box-shadow: 0 0 10px rgba(255,51,85,0.07);
 }
 .input-block select,
-.input-block input[type=“number”] {
-width: 100%; background: transparent; border: none;
-color: var(–text); font-family: ‘Exo 2’, sans-serif;
-font-size: 0.95rem; font-weight: 600; outline: none; cursor: pointer;
+.input-block input[type="number"] {
+width: 100%;
+background: rgba(255,255,255,0.05);
+border: 1px solid rgba(255,255,255,0.12);
+border-radius: 5px;
+color: var(–text);
+font-family: 'Exo 2', sans-serif;
+font-size: 1rem;
+font-weight: 600;
+padding: 0.38rem 0.55rem;
+outline: none;
+cursor: pointer;
+margin-top: 2px;
+}
+.input-block select:focus,
+.input-block input[type="number"]:focus {
+border-color: rgba(255,51,85,0.55);
+background: rgba(255,51,85,0.05);
 }
 .input-block select option { background: #13131f; }
 
@@ -685,7 +728,11 @@ const ICON_512 = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAgAAAAIACAYAAAD0
   <!-- API Key -->
 
   <div class="api-block">
-    <span class="field-label">Anthropic API Key</span>
+    <div class="api-block-header">
+      <span style="font-size:1.1rem">🔑</span>
+      <span class="api-block-title">ANTHROPIC API KEY</span>
+    </div>
+    <span class="field-label">Sleutel</span>
     <div class="key-row">
       <input type="password" id="apiKey" placeholder="sk-ant-..."
         oninput="localStorage.setItem('signalslev_apikey', this.value)">
@@ -700,11 +747,11 @@ const ICON_512 = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAgAAAAIACAYAAAD0
 
   <div class="inputs-grid">
     <div class="input-block">
-      <span class="field-label">Coin (Futures Analyse)</span>
+      <span class="field-label">🪙 Coin (Futures Analyse)</span>
       <select id="coinSelect"></select>
     </div>
     <div class="input-block">
-      <span class="field-label">Tijdframe</span>
+      <span class="field-label">⏱ Tijdframe</span>
       <select id="timeframe">
         <option value="scalp (1m-15m)">Scalp (1m-15m)</option>
         <option value="intraday (15m-4u)">Intraday (15m-4u)</option>
@@ -713,7 +760,7 @@ const ICON_512 = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAgAAAAIACAYAAAD0
       </select>
     </div>
     <div class="input-block">
-      <span class="field-label">Risicoprofiel</span>
+      <span class="field-label">⚠️ Risicoprofiel</span>
       <select id="riskProfile">
         <option value="conservatief">Conservatief</option>
         <option value="gematigd" selected>Gematigd</option>
@@ -721,7 +768,7 @@ const ICON_512 = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAgAAAAIACAYAAAD0
       </select>
     </div>
     <div class="input-block">
-      <span class="field-label">Kapitaal ($)</span>
+      <span class="field-label">💰 Kapitaal ($)</span>
       <input type="number" id="amount" value="500" min="1">
     </div>
   </div>
