@@ -966,6 +966,27 @@ animation: mdBlink 1s infinite;
 .modal-loading span:nth-child(3) { animation-delay: 0.4s; }
 @keyframes mdBlink { 0%,80%,100%{opacity:0.15} 40%{opacity:1} }
 
+/* ── IN-APP ALERT BANNER ── */
+#alertBanner {
+display: none;
+position: fixed;
+top: 0; left: 0; right: 0;
+z-index: 10000;
+background: #ffaa00;
+color: #000;
+font-family: ‘Orbitron’, monospace;
+font-size: 0.7rem;
+font-weight: 700;
+letter-spacing: 0.08em;
+padding: 0.7rem 1rem;
+text-align: center;
+box-shadow: 0 2px 12px rgba(255,170,0,0.5);
+animation: bannerSlide 0.3s ease both;
+cursor: pointer;
+}
+#alertBanner.show { display: block; }
+@keyframes bannerSlide { from{transform:translateY(-100%)} to{transform:translateY(0)} }
+
 </style>
 
 <script>
@@ -988,6 +1009,8 @@ const ICON_512 = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAgAAAAIACAYAAAD0
 
 </head>
 <body>
+
+<div id="alertBanner" onclick="this.classList.remove('show')">⚡ SIGNAAL GEVONDEN — tik om te sluiten</div>
 <div class="wrap">
 
   <!-- Header -->
@@ -2111,9 +2134,25 @@ function toggleAlert() {
   }
 }
 
+let _audioCtx = null;
+
+function unlockAudio() {
+  if (_audioCtx) return;
+  try {
+    _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    // Speel een stil geluid om AudioContext te unlocken
+    const buf = _audioCtx.createBuffer(1, 1, 22050);
+    const src = _audioCtx.createBufferSource();
+    src.buffer = buf;
+    src.connect(_audioCtx.destination);
+    src.start(0);
+  } catch(e) {}
+}
+
 async function startAlert() {
   const apiKey = document.getElementById('apiKey').value.trim();
   if (!apiKey) { alert('Vul eerst je Anthropic API key in!'); return; }
+  unlockAudio(); // unlock bij gebruikersinteractie
 
   // \u2460 Vraag notificatie toestemming DIRECT bij starten
   if ('Notification' in window && Notification.permission === 'default') {
@@ -2206,20 +2245,23 @@ function stopAlert() {
 
 function playAlertSound() {
   try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    [440, 550, 660].forEach((freq, i) => {
+    const ctx = _audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+    if (ctx.state === 'suspended') ctx.resume();
+    // Drietonig alarm: luid en duidelijk
+    [[440,0],[660,0.2],[880,0.4],[660,0.65],[440,0.85]].forEach(([freq, t]) => {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       osc.connect(gain);
       gain.connect(ctx.destination);
       osc.frequency.value = freq;
-      osc.type = 'sine';
-      gain.gain.setValueAtTime(0.3, ctx.currentTime + i * 0.15);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.15 + 0.3);
-      osc.start(ctx.currentTime + i * 0.15);
-      osc.stop(ctx.currentTime + i * 0.15 + 0.3);
+      osc.type = 'triangle';
+      gain.gain.setValueAtTime(0, ctx.currentTime + t);
+      gain.gain.linearRampToValueAtTime(0.6, ctx.currentTime + t + 0.04);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + t + 0.22);
+      osc.start(ctx.currentTime + t);
+      osc.stop(ctx.currentTime + t + 0.25);
     });
-  } catch(e) {}
+  } catch(e) { console.log('Audio error:', e); }
 }
 
 async function runAlertScan() {
@@ -2292,8 +2334,15 @@ ${priceLines.join('\n')}`,
     statusText.textContent = `Laatste scan: ${timeStr} | ${hits.length} signaal${hits.length !== 1 ? 'en' : ''} gevonden`;
 
     if (hits.length > 0) {
-      // Geluid spelen (werkt ook als meldingen geblokkeerd zijn)
+      // Geluid spelen
       playAlertSound();
+
+      // In-app banner tonen
+      const banner = document.getElementById('alertBanner');
+      const bannerCoins = hits.map(h => `⚡ ${h.coin} ${h.richting} ${h.kans}%`).join('  •  ');
+      banner.textContent = bannerCoins + '  —  Tik om te sluiten';
+      banner.classList.add('show');
+      setTimeout(() => banner.classList.remove('show'), 15000);
 
       // Browser/Android notificatie via Service Worker (werkt in Samsung Internet)
       if ('Notification' in window && Notification.permission === 'granted') {
