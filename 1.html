@@ -1,0 +1,1616 @@
+<!DOCTYPE html>
+
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>SignalsLeverage</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#ff3355">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="application-name" content="SignalsLev">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="SignalsLev">
+<meta name="description" content="FIAS Arche · Leverage Trading Systeem">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&family=Exo+2:wght@300;400;600&display=swap');
+
+:root {
+–bg:      #0a0a0f;
+–panel:   #0f0f1a;
+–card:    #13131f;
+–border:  #1e1e35;
+–red:     #ff3355;
+–green:   #00ff88;
+–blue:    #0088ff;
+–gold:    #ffaa00;
+–purple:  #9944ff;
+–text:    #e8eeff;
+–muted:   #44446a;
+–long:    #00ff88;
+–short:   #ff3355;
+}
+
+- { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+background: var(–bg);
+color: var(–text);
+font-family: ‘Exo 2’, sans-serif;
+min-height: 100vh;
+overflow-x: hidden;
+}
+
+/* Grid background */
+body::before {
+content: ‘’;
+position: fixed;
+inset: 0;
+background-image:
+linear-gradient(rgba(255,51,85,0.03) 1px, transparent 1px),
+linear-gradient(90deg, rgba(255,51,85,0.03) 1px, transparent 1px);
+background-size: 40px 40px;
+pointer-events: none;
+z-index: 0;
+}
+
+.wrap {
+position: relative;
+z-index: 1;
+max-width: 900px;
+margin: 0 auto;
+padding: 1.2rem 1rem 5rem;
+padding-top: max(1.2rem, env(safe-area-inset-top));
+}
+
+/* ── HEADER ── */
+.header {
+display: flex;
+align-items: flex-start;
+justify-content: space-between;
+margin-bottom: 1.5rem;
+padding-bottom: 1rem;
+border-bottom: 1px solid var(–border);
+}
+
+.logo-block {}
+
+.logo {
+font-family: ‘Orbitron’, monospace;
+font-size: 2.2rem;
+font-weight: 900;
+color: var(–red);
+letter-spacing: 0.08em;
+text-shadow: 0 0 30px rgba(255,51,85,0.6), 0 0 60px rgba(255,51,85,0.2);
+line-height: 1;
+}
+
+.logo-sub {
+font-family: ‘Share Tech Mono’, monospace;
+font-size: 0.58rem;
+color: var(–muted);
+letter-spacing: 0.18em;
+margin-top: 3px;
+}
+
+.made-by {
+font-family: ‘Dancing Script’, ‘Palatino Linotype’, Georgia, cursive;
+font-style: italic;
+font-size: 0.95rem;
+color: var(–gold);
+margin-top: 2px;
+}
+
+.header-right {
+display: flex;
+flex-direction: column;
+align-items: flex-end;
+gap: 0.4rem;
+}
+
+.fias-badge {
+font-family: ‘Share Tech Mono’, monospace;
+font-size: 0.58rem;
+color: var(–purple);
+border: 1px solid rgba(153,68,255,0.4);
+padding: 4px 10px;
+border-radius: 3px;
+background: rgba(153,68,255,0.06);
+letter-spacing: 0.1em;
+}
+
+.mexc-badge {
+font-family: ‘Share Tech Mono’, monospace;
+font-size: 0.55rem;
+color: var(–blue);
+border: 1px solid rgba(0,136,255,0.3);
+padding: 3px 8px;
+border-radius: 3px;
+background: rgba(0,136,255,0.05);
+letter-spacing: 0.08em;
+}
+
+/* ── PRICE STRIP ── */
+.price-strip {
+display: flex;
+gap: 0.6rem;
+margin-bottom: 1rem;
+overflow-x: auto;
+padding-bottom: 4px;
+scrollbar-width: none;
+}
+.price-strip::-webkit-scrollbar { display: none; }
+
+.price-chip {
+flex-shrink: 0;
+background: var(–card);
+border: 1px solid var(–border);
+border-radius: 6px;
+padding: 0.5rem 0.8rem;
+min-width: 90px;
+}
+.price-chip .pc-name {
+font-family: ‘Share Tech Mono’, monospace;
+font-size: 0.5rem;
+color: var(–muted);
+letter-spacing: 0.1em;
+text-transform: uppercase;
+}
+.price-chip .pc-val {
+font-family: ‘Orbitron’, monospace;
+font-size: 0.75rem;
+font-weight: 700;
+margin-top: 2px;
+}
+.price-chip .pc-chg {
+font-family: ‘Share Tech Mono’, monospace;
+font-size: 0.5rem;
+margin-top: 1px;
+}
+
+/* ── API KEY ── */
+.api-block {
+background: var(–card);
+border: 1px solid var(–border);
+border-radius: 8px;
+padding: 0.9rem 1rem;
+margin-bottom: 1rem;
+}
+.field-label {
+font-family: ‘Share Tech Mono’, monospace;
+font-size: 0.55rem;
+color: var(–muted);
+letter-spacing: 0.12em;
+text-transform: uppercase;
+margin-bottom: 0.4rem;
+display: block;
+}
+.key-row { display: flex; gap: 0.5rem; align-items: center; }
+.key-row input {
+flex: 1; background: transparent; border: none;
+color: var(–text); font-family: ‘Share Tech Mono’, monospace;
+font-size: 0.8rem; outline: none;
+}
+.key-row input::placeholder { color: var(–muted); }
+.icon-btn {
+background: transparent; border: 1px solid var(–border);
+color: var(–muted); border-radius: 4px; padding: 4px 8px;
+cursor: pointer; font-size: 0.75rem;
+}
+.icon-btn:hover { border-color: var(–red); color: var(–red); }
+.key-hint {
+font-family: ‘Share Tech Mono’, monospace;
+font-size: 0.5rem; color: var(–muted);
+margin-top: 5px; display: block;
+}
+.key-hint a { color: var(–blue); }
+
+/* ── INPUTS GRID ── */
+.inputs-grid {
+display: grid;
+grid-template-columns: 1fr 1fr;
+gap: 0.7rem;
+margin-bottom: 0.7rem;
+}
+.input-block {
+background: var(–card);
+border: 1px solid var(–border);
+border-radius: 8px;
+padding: 0.8rem 1rem;
+}
+.input-block select,
+.input-block input[type=“number”] {
+width: 100%; background: transparent; border: none;
+color: var(–text); font-family: ‘Exo 2’, sans-serif;
+font-size: 0.95rem; font-weight: 600; outline: none; cursor: pointer;
+}
+.input-block select option { background: #13131f; }
+
+/* ── LEVERAGE SELECTOR ── */
+.lev-block {
+background: var(–card);
+border: 1px solid rgba(255,51,85,0.3);
+border-radius: 8px;
+padding: 0.8rem 1rem;
+margin-bottom: 1rem;
+display: flex;
+align-items: center;
+gap: 1rem;
+flex-wrap: wrap;
+}
+.lev-title {
+font-family: ‘Orbitron’, monospace;
+font-size: 0.65rem;
+color: var(–red);
+letter-spacing: 0.1em;
+flex-shrink: 0;
+}
+.lev-buttons {
+display: flex;
+gap: 0.4rem;
+flex-wrap: wrap;
+flex: 1;
+}
+.lev-btn {
+background: transparent;
+border: 1px solid var(–border);
+color: var(–muted);
+border-radius: 4px;
+padding: 5px 12px;
+font-family: ‘Orbitron’, monospace;
+font-size: 0.62rem;
+font-weight: 700;
+cursor: pointer;
+transition: all 0.15s;
+letter-spacing: 0.05em;
+}
+.lev-btn:hover { border-color: var(–red); color: var(–red); }
+.lev-btn.active {
+background: rgba(255,51,85,0.15);
+border-color: var(–red);
+color: var(–red);
+box-shadow: 0 0 10px rgba(255,51,85,0.3);
+}
+
+/* ── ENTITIES ── */
+.entities-row {
+display: flex;
+gap: 0.4rem;
+margin-bottom: 1rem;
+flex-wrap: wrap;
+}
+.entity-chip {
+display: flex;
+align-items: center;
+gap: 0.35rem;
+font-family: ‘Share Tech Mono’, monospace;
+font-size: 0.58rem;
+padding: 5px 10px;
+border-radius: 4px;
+border: 1px solid var(–border);
+color: var(–muted);
+background: var(–card);
+transition: all 0.2s;
+letter-spacing: 0.04em;
+}
+.entity-chip .led {
+width: 5px; height: 5px;
+border-radius: 50%;
+background: var(–muted);
+transition: all 0.2s;
+flex-shrink: 0;
+}
+.entity-chip.running { border-color: var(–red); color: var(–red); background: rgba(255,51,85,0.06); }
+.entity-chip.running .led { background: var(–red); box-shadow: 0 0 6px var(–red); animation: pulse 0.7s infinite; }
+.entity-chip.done { border-color: rgba(0,255,136,0.4); color: rgba(0,255,136,0.7); }
+.entity-chip.done .led { background: rgba(0,255,136,0.5); }
+
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.2} }
+
+/* ── BUTTONS ── */
+.main-btn {
+width: 100%;
+background: transparent;
+border: 1px solid var(–red);
+color: var(–red);
+font-family: ‘Orbitron’, monospace;
+font-size: 1.1rem;
+font-weight: 700;
+letter-spacing: 0.15em;
+padding: 0.85rem;
+border-radius: 6px;
+cursor: pointer;
+transition: all 0.2s;
+margin-bottom: 0.7rem;
+box-shadow: 0 0 20px rgba(255,51,85,0.1);
+}
+.main-btn:hover:not(:disabled) {
+background: rgba(255,51,85,0.08);
+box-shadow: 0 0 40px rgba(255,51,85,0.3);
+}
+.main-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+.scan-btn {
+border-color: var(–gold);
+color: var(–gold);
+box-shadow: 0 0 20px rgba(255,170,0,0.08);
+}
+.scan-btn:hover:not(:disabled) {
+background: rgba(255,170,0,0.06);
+box-shadow: 0 0 40px rgba(255,170,0,0.25);
+}
+
+/* ── DISCLAIMER ── */
+.disclaimer {
+font-family: ‘Share Tech Mono’, monospace;
+font-size: 0.52rem;
+color: var(–muted);
+text-align: center;
+padding: 0.6rem;
+border: 1px solid var(–border);
+border-radius: 6px;
+line-height: 1.7;
+margin-bottom: 1rem;
+}
+
+/* ── SCAN RESULT ── */
+.scan-section { display: none; margin-bottom: 1rem; }
+
+/* ── RESULT CARDS ── */
+.results { display: none; flex-direction: column; gap: 0.8rem; }
+.results.visible { display: flex; }
+
+.result-card {
+background: var(–card);
+border: 1px solid var(–border);
+border-radius: 8px;
+overflow: hidden;
+animation: slideUp 0.3s ease both;
+}
+@keyframes slideUp {
+from { opacity:0; transform: translateY(10px); }
+to   { opacity:1; transform: translateY(0); }
+}
+
+.card-head {
+display: flex;
+align-items: center;
+gap: 0.6rem;
+padding: 0.65rem 1rem;
+border-bottom: 1px solid var(–border);
+background: rgba(255,255,255,0.015);
+}
+.ctag {
+font-family: ‘Share Tech Mono’, monospace;
+font-size: 0.54rem;
+letter-spacing: 0.08em;
+padding: 3px 7px;
+border-radius: 3px;
+}
+.ctag-structure { background: rgba(0,136,255,0.1); color: var(–blue); border: 1px solid rgba(0,136,255,0.3); }
+.ctag-signal    { background: rgba(255,51,85,0.1);  color: var(–red);  border: 1px solid rgba(255,51,85,0.3); }
+.ctag-risk      { background: rgba(255,170,0,0.1);  color: var(–gold); border: 1px solid rgba(255,170,0,0.3); }
+.ctag-execute   { background: rgba(153,68,255,0.1); color: var(–purple); border: 1px solid rgba(153,68,255,0.3); }
+
+.card-title { font-size: 0.8rem; font-weight: 600; flex: 1; }
+
+.fias-chip {
+font-family: ‘Share Tech Mono’, monospace;
+font-size: 0.54rem;
+color: var(–purple);
+background: rgba(153,68,255,0.08);
+border: 1px solid rgba(153,68,255,0.2);
+padding: 3px 7px;
+border-radius: 3px;
+}
+
+.card-body {
+padding: 1rem;
+font-size: 0.78rem;
+line-height: 1.65;
+color: #111;
+background: #ffffff;
+min-height: 60px;
+white-space: normal;
+}
+
+/* Loading dots */
+.dots { display: inline-flex; gap: 5px; }
+.dots span {
+width: 5px; height: 5px;
+background: var(–red);
+border-radius: 50%;
+animation: pulse 1s infinite;
+}
+.dots span:nth-child(2) { animation-delay:.2s; }
+.dots span:nth-child(3) { animation-delay:.4s; }
+
+/* ── ACTION SECTIONS ── */
+.action-section {
+border-radius: 10px;
+padding: 1rem;
+margin-bottom: 1rem;
+position: relative;
+}
+.action-section-1 {
+border: 2px solid rgba(0,136,255,0.5);
+background: rgba(0,136,255,0.04);
+box-shadow: 0 0 18px rgba(0,136,255,0.07);
+}
+.action-section-2 {
+border: 2px solid rgba(255,51,85,0.5);
+background: rgba(255,51,85,0.04);
+box-shadow: 0 0 18px rgba(255,51,85,0.07);
+}
+.action-section-3 {
+border: 2px solid rgba(255,170,0,0.5);
+background: rgba(255,170,0,0.04);
+box-shadow: 0 0 18px rgba(255,170,0,0.07);
+}
+.action-header {
+display: flex;
+align-items: center;
+gap: 0.7rem;
+margin-bottom: 0.9rem;
+padding-bottom: 0.6rem;
+border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.action-number {
+font-family: 'Orbitron', monospace;
+font-size: 0.85rem;
+font-weight: 900;
+width: 28px;
+height: 28px;
+border-radius: 50%;
+display: flex;
+align-items: center;
+justify-content: center;
+flex-shrink: 0;
+}
+.action-number-1 { background: rgba(0,136,255,0.2); color: var(–blue); border: 1px solid rgba(0,136,255,0.5); }
+.action-number-2 { background: rgba(255,51,85,0.2); color: var(–red); border: 1px solid rgba(255,51,85,0.5); }
+.action-number-3 { background: rgba(255,170,0,0.2); color: var(–gold); border: 1px solid rgba(255,170,0,0.5); }
+.action-label {
+font-family: 'Orbitron', monospace;
+font-size: 0.62rem;
+font-weight: 700;
+letter-spacing: 0.12em;
+}
+.action-label-1 { color: var(–blue); }
+.action-label-2 { color: var(–red); }
+.action-label-3 { color: var(–gold); }
+
+/* ── COIN SEARCH ── */
+.search-block {
+background: transparent;
+border: none;
+padding: 0;
+margin-bottom: 0;
+}
+.search-title {
+font-family: ‘Orbitron’, monospace;
+font-size: 0.65rem;
+color: var(–blue);
+letter-spacing: 0.12em;
+margin-bottom: 0.7rem;
+display: flex;
+align-items: center;
+gap: 0.5rem;
+}
+.search-row {
+display: flex;
+gap: 0.5rem;
+margin-bottom: 0.7rem;
+}
+.search-input {
+flex: 1;
+background: rgba(0,136,255,0.05);
+border: 1px solid rgba(0,136,255,0.25);
+border-radius: 6px;
+padding: 0.6rem 0.8rem;
+color: var(–text);
+font-family: ‘Share Tech Mono’, monospace;
+font-size: 0.9rem;
+outline: none;
+}
+.search-input::placeholder { color: var(–muted); }
+.search-input:focus { border-color: var(–blue); }
+.search-btn {
+background: rgba(0,136,255,0.1);
+border: 1px solid rgba(0,136,255,0.4);
+color: var(–blue);
+border-radius: 6px;
+padding: 0.6rem 1rem;
+font-family: ‘Orbitron’, monospace;
+font-size: 0.65rem;
+font-weight: 700;
+cursor: pointer;
+letter-spacing: 0.08em;
+transition: all 0.2s;
+white-space: nowrap;
+}
+.search-btn:hover:not(:disabled) {
+background: rgba(0,136,255,0.2);
+box-shadow: 0 0 15px rgba(0,136,255,0.3);
+}
+.search-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.search-result {
+display: none;
+background: #ffffff;
+border-radius: 6px;
+padding: 0.9rem;
+font-size: 0.78rem;
+line-height: 1.65;
+color: #111;
+}
+.search-result.visible { display: block; }
+.opportunity-bar {
+display: none;
+align-items: center;
+gap: 0.6rem;
+padding: 0.5rem 0.8rem;
+border-radius: 5px;
+font-family: ‘Orbitron’, monospace;
+font-size: 0.7rem;
+font-weight: 700;
+margin-bottom: 0.6rem;
+border: 1px solid;
+}
+.opportunity-bar.yes { background: rgba(0,255,136,0.1); border-color: rgba(0,255,136,0.4); color: #00cc66; }
+.opportunity-bar.no  { background: rgba(255,170,0,0.08); border-color: rgba(255,170,0,0.3); color: var(–gold); }
+.opportunity-bar.visible { display: flex; }
+
+/* ── DIRECTION INDICATOR ── */
+.direction-bar {
+display: none;
+align-items: center;
+gap: 0.8rem;
+padding: 0.6rem 1rem;
+margin-bottom: 0.7rem;
+border-radius: 6px;
+font-family: ‘Orbitron’, monospace;
+font-size: 1rem;
+font-weight: 900;
+letter-spacing: 0.1em;
+border: 1px solid;
+}
+.direction-bar.long {
+background: rgba(0,255,136,0.08);
+border-color: rgba(0,255,136,0.4);
+color: var(–long);
+}
+.direction-bar.short {
+background: rgba(255,51,85,0.08);
+border-color: rgba(255,51,85,0.4);
+color: var(–short);
+}
+.direction-bar.visible { display: flex; }
+</style>
+
+<script>
+// Embedded PWA icons (Samsung Internet compatible)
+const ICON_192 = 'data:image/png;base64,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';
+const ICON_512 = 'data:image/png;base64,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';
+// Dynamic link injection for Samsung Internet
+(function() {
+  var l = document.createElement('link');
+  l.rel = 'apple-touch-icon';
+  l.href = ICON_192;
+  document.head.appendChild(l);
+  var l2 = document.createElement('link');
+  l2.rel = 'icon';
+  l2.type = 'image/png';
+  l2.href = ICON_192;
+  document.head.appendChild(l2);
+})();
+</script>
+
+</head>
+<body>
+<div class="wrap">
+
+  <!-- Header -->
+
+  <div class="header">
+    <div class="logo-block">
+      <div class="logo">SIGNALS<span style="color:#ffaa00">LEV</span></div>
+      <div class="made-by">Made by Rob Borghouts</div>
+      <div class="logo-sub">FIAS ARCHE · LEVERAGE TRADING SYSTEEM · AI ENTITIES</div>
+    </div>
+    <div class="header-right">
+      <div class="fias-badge">⬡ FIAS v0.1</div>
+      <div class="mexc-badge">⚡ FUTURES ANALYSE</div>
+    </div>
+  </div>
+
+  <!-- Live price strip -->
+
+  <div class="price-strip" id="priceStrip">
+    <div class="price-chip">
+      <div class="pc-name">BTC</div>
+      <div class="pc-val" id="p-btc" style="color:#ffaa00">—</div>
+      <div class="pc-chg" id="c-btc">—</div>
+    </div>
+    <div class="price-chip">
+      <div class="pc-name">ETH</div>
+      <div class="pc-val" id="p-eth" style="color:#6ab0ff">—</div>
+      <div class="pc-chg" id="c-eth">—</div>
+    </div>
+    <div class="price-chip">
+      <div class="pc-name">SOL</div>
+      <div class="pc-val" id="p-sol" style="color:#9966ff">—</div>
+      <div class="pc-chg" id="c-sol">—</div>
+    </div>
+    <div class="price-chip">
+      <div class="pc-name">BNB</div>
+      <div class="pc-val" id="p-bnb" style="color:#ffcc00">—</div>
+      <div class="pc-chg" id="c-bnb">—</div>
+    </div>
+    <div class="price-chip">
+      <div class="pc-name">FIAS</div>
+      <div class="pc-val" id="p-fias" style="color:#9944ff">—</div>
+      <div class="pc-chg" id="c-fias">—</div>
+    </div>
+  </div>
+
+  <!-- ACTION SECTION 1: ZOEK SCHERMPJE -->
+  <div class="action-section action-section-1">
+    <div class="action-header">
+      <div class="action-number action-number-1">1</div>
+      <div class="action-label action-label-1">🔎 ZOEK SCHERMPJE — COIN OPZOEKEN</div>
+    </div>
+
+  <div class="search-block">
+    <div class="search-row">
+      <input class="search-input" id="searchCoin" placeholder="Bijv: Bitcoin, PEPE, TAO, MON..." 
+        onkeydown="if(event.key==='Enter') searchLeverage()">
+      <button class="search-btn" id="searchBtn" onclick="searchLeverage()">ANALYSEER</button>
+    </div>
+    <div class="opportunity-bar" id="oppBar">
+      <span id="oppIcon">⚡</span>
+      <span id="oppText">—</span>
+    </div>
+    <div class="search-result" id="searchResult"></div>
+  </div>
+  </div><!-- /action-section-1 -->
+
+  <!-- ACTION SECTION 2: GENEREER LEVERAGE SIGNAAL -->
+  <div class="action-section action-section-2">
+    <div class="action-header">
+      <div class="action-number action-number-2">2</div>
+      <div class="action-label action-label-2">⚡ GENEREER LEVERAGE SIGNAAL</div>
+    </div>
+
+  <!-- API Key -->
+
+  <div class="api-block">
+    <span class="field-label">Anthropic API Key</span>
+    <div class="key-row">
+      <input type="password" id="apiKey" placeholder="sk-ant-..."
+        oninput="localStorage.setItem('signalslev_apikey', this.value)">
+      <button class="icon-btn" onclick="toggleKey()">👁</button>
+    </div>
+    <span class="key-hint">
+      Via <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a> · Lokaal opgeslagen
+    </span>
+  </div>
+
+  <!-- Inputs -->
+
+  <div class="inputs-grid">
+    <div class="input-block">
+      <span class="field-label">Coin (Futures Analyse)</span>
+      <select id="coinSelect"></select>
+    </div>
+    <div class="input-block">
+      <span class="field-label">Tijdframe</span>
+      <select id="timeframe">
+        <option value="scalp (1m-15m)">Scalp (1m-15m)</option>
+        <option value="intraday (15m-4u)">Intraday (15m-4u)</option>
+        <option value="swing (1-7 dagen)" selected>Swing (1-7d)</option>
+        <option value="positie (1-4 weken)">Positie (1-4w)</option>
+      </select>
+    </div>
+    <div class="input-block">
+      <span class="field-label">Risicoprofiel</span>
+      <select id="riskProfile">
+        <option value="conservatief">Conservatief</option>
+        <option value="gematigd" selected>Gematigd</option>
+        <option value="agressief">Agressief</option>
+      </select>
+    </div>
+    <div class="input-block">
+      <span class="field-label">Kapitaal ($)</span>
+      <input type="number" id="amount" value="500" min="1">
+    </div>
+  </div>
+
+  <!-- Leverage selector -->
+
+  <div class="lev-block">
+    <div class="lev-title">⚡ HEFBOOM</div>
+    <div class="lev-buttons">
+      <button class="lev-btn" onclick="setLev(this,2)">2x</button>
+      <button class="lev-btn active" onclick="setLev(this,3)">3x</button>
+      <button class="lev-btn" onclick="setLev(this,5)">5x</button>
+      <button class="lev-btn" onclick="setLev(this,10)">10x</button>
+      <button class="lev-btn" onclick="setLev(this,20)">20x</button>
+      <button class="lev-btn" onclick="setLev(this,50)">50x</button>
+    </div>
+  </div>
+
+  <!-- Direction indicator -->
+
+  <div class="direction-bar" id="directionBar">
+    <span id="directionIcon">⚡</span>
+    <span id="directionText">—</span>
+  </div>
+
+  <!-- Entity chips -->
+
+  <div class="entities-row">
+    <div class="entity-chip" id="chip-structure"><span class="led"></span>MARKET STRUCTURE</div>
+    <div class="entity-chip" id="chip-signal"><span class="led"></span>LEVERAGE SIGNAL</div>
+    <div class="entity-chip" id="chip-risk"><span class="led"></span>RISK CALCULATOR</div>
+    <div class="entity-chip" id="chip-execute"><span class="led"></span>TRADE EXECUTOR</div>
+  </div>
+
+  <!-- Main button -->
+
+  <button class="main-btn" id="analyzeBtn" onclick="runAnalysis()">
+    ⚡ GENEREER LEVERAGE SIGNAAL
+  </button>
+
+  <!-- Analysis results -->
+
+  <div class="results" id="results">
+
+<div class="result-card" style="animation-delay:0s">
+  <div class="card-head">
+    <span class="ctag ctag-structure">ENTITY 01 · MARKET STRUCTURE</span>
+    <span class="card-title">Marktstructuur Analyse</span>
+    <span class="fias-chip">⬡ 0.0012 FIAS</span>
+  </div>
+  <div class="card-body" id="body-structure">
+    <div class="dots"><span></span><span></span><span></span></div>
+  </div>
+</div>
+
+<div class="result-card" style="animation-delay:0.1s">
+  <div class="card-head">
+    <span class="ctag ctag-signal">ENTITY 02 · LEVERAGE SIGNAL</span>
+    <span class="card-title">LONG / SHORT Signaal</span>
+    <span class="fias-chip">⬡ 0.0025 FIAS</span>
+  </div>
+  <div class="card-body" id="body-signal">
+    <div class="dots"><span></span><span></span><span></span></div>
+  </div>
+</div>
+
+<div class="result-card" style="animation-delay:0.2s">
+  <div class="card-head">
+    <span class="ctag ctag-risk">ENTITY 03 · RISK CALCULATOR</span>
+    <span class="card-title">Risico & Liquidatie</span>
+    <span class="fias-chip">⬡ 0.0018 FIAS</span>
+  </div>
+  <div class="card-body" id="body-risk">
+    <div class="dots"><span></span><span></span><span></span></div>
+  </div>
+</div>
+
+<div class="result-card" style="animation-delay:0.3s">
+  <div class="card-head">
+    <span class="ctag ctag-execute">ENTITY 04 · TRADE EXECUTOR</span>
+    <span class="card-title">Trade Uitvoering</span>
+    <span class="fias-chip">⬡ 0.0021 FIAS</span>
+  </div>
+  <div class="card-body" id="body-execute">
+    <div class="dots"><span></span><span></span><span></span></div>
+  </div>
+</div><!-- /result-card -->
+
+  </div><!-- /results -->
+  </div><!-- /action-section-2 -->
+
+  <!-- ACTION SECTION 3: SCAN MARKT OP LEVERAGE KANSEN -->
+  <div class="action-section action-section-3">
+    <div class="action-header">
+      <div class="action-number action-number-3">3</div>
+      <div class="action-label action-label-3">🔍 SCAN MARKT OP LEVERAGE KANSEN</div>
+    </div>
+
+  <button class="main-btn scan-btn" id="scanBtn" onclick="runScan()">
+    🔍 SCAN MARKT OP LEVERAGE KANSEN
+  </button>
+
+  <!-- Disclaimer -->
+
+  <div class="disclaimer">
+    ⚠️ UITSLUITEND VOOR EDUCATIEVE DOELEINDEN · GEEN FINANCIEEL ADVIES
+    LEVERAGE TRADING BRENGT EXTREEM HOOG RISICO MET ZICH MEE · U KUNT MEER VERLIEZEN DAN UW INLEG
+  </div>
+
+  <!-- Scan result -->
+
+  <div class="scan-section" id="scanSection">
+    <div class="result-card">
+      <div class="card-head">
+        <span class="ctag ctag-signal">🔍 LEVERAGE MARKET SCANNER</span>
+        <span class="card-title">Top Leverage Kansen</span>
+        <span id="scanTime" style="font-family:'Share Tech Mono',monospace;font-size:0.52rem;color:var(--muted)"></span>
+      </div>
+      <div class="card-body" id="scanBody">
+        <div class="dots"><span></span><span></span><span></span></div>
+      </div>
+    </div>
+  </div>
+
+  </div><!-- /action-section-3 -->
+
+</div><!-- /wrap -->
+
+<script>
+// ─── FUTURES ANALYSE COINS ───────────────────────────────────────
+const FUTURES_COINS = [
+  'Bitcoin (BTC)','Ethereum (ETH)','Solana (SOL)','BNB (BNB)',
+  'XRP (XRP)','Dogecoin (DOGE)','Cardano (ADA)','Avalanche (AVAX)',
+  'Chainlink (LINK)','Polkadot (DOT)','Litecoin (LTC)','Polygon (MATIC)',
+  'Pepe (PEPE)','Shiba Inu (SHIB)','Sui (SUI)','Toncoin (TON)',
+  'Uniswap (UNI)','Aptos (APT)','Near Protocol (NEAR)','Injective (INJ)',
+  'Arbitrum (ARB)','Optimism (OP)','Sei (SEI)','Render (RNDR)',
+  'Fetch.ai (FET)','Celestia (TIA)','Jupiter (JUP)',
+  'Bonk (BONK)','WIF (WIF)','Notcoin (NOT)','Floki (FLOKI)'
+];
+
+const COIN_IDS = {
+  'Bitcoin (BTC)':        'bitcoin',
+  'Ethereum (ETH)':       'ethereum',
+  'Solana (SOL)':         'solana',
+  'BNB (BNB)':            'binancecoin',
+  'XRP (XRP)':            'ripple',
+  'Dogecoin (DOGE)':      'dogecoin',
+  'Cardano (ADA)':        'cardano',
+  'Avalanche (AVAX)':     'avalanche-2',
+  'Chainlink (LINK)':     'chainlink',
+  'Polkadot (DOT)':       'polkadot',
+  'Litecoin (LTC)':       'litecoin',
+  'Polygon (MATIC)':      'matic-network',
+  'Pepe (PEPE)':          'pepe',
+  'Shiba Inu (SHIB)':     'shiba-inu',
+  'Sui (SUI)':            'sui',
+  'Toncoin (TON)':        'the-open-network',
+  'Uniswap (UNI)':        'uniswap',
+  'Aptos (APT)':          'aptos',
+  'Near Protocol (NEAR)': 'near',
+  'Injective (INJ)':      'injective-protocol',
+  'Arbitrum (ARB)':       'arbitrum',
+  'Optimism (OP)':        'optimism',
+  'Sei (SEI)':            'sei-network',
+  'Render (RNDR)':        'render-token',
+  'Fetch.ai (FET)':       'fetch-ai',
+  'Celestia (TIA)':       'celestia',
+  'Jupiter (JUP)':        'jupiter-exchange-solana',
+  'Bonk (BONK)':          'bonk',
+  'WIF (WIF)':            'dogwifcoin',
+  'Notcoin (NOT)':        'notcoin',
+  'Floki (FLOKI)':        'floki'
+};
+
+// ─── LEVERAGE STATE ───────────────────────────────────────────
+let selectedLev = 3;
+function setLev(btn, val) {
+  selectedLev = val;
+  document.querySelectorAll('.lev-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+// ─── HELPERS ─────────────────────────────────────────────────
+function toggleKey() {
+  const f = document.getElementById('apiKey');
+  f.type = f.type === 'password' ? 'text' : 'password';
+}
+
+function setChip(id, state) {
+  document.getElementById('chip-' + id).className = 'entity-chip ' + state;
+}
+
+function loading(id) {
+  document.getElementById('body-' + id).innerHTML =
+    '<div class="dots"><span></span><span></span><span></span></div>';
+}
+
+function showError(id, msg) {
+  document.getElementById('body-' + id).innerHTML =
+    `<span style="color:#ff3355">❌ ${msg}</span>`;
+  setChip(id, '');
+}
+
+function renderMd(text) {
+  return text
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/^#{1,3}\s+(.+)$/gm, '<strong style="color:#1a2a6c">$1</strong>')
+    .replace(/\*\*(.+?)\*\*/g, '<strong style="color:#1a2a6c">$1</strong>')
+    .replace(/^---+$/gm, '<hr style="border:none;border-top:1px solid #ddd;margin:5px 0">')
+    .replace(/\n\n+/g, '<br>')
+    .replace(/\n/g, ' ');
+}
+
+// ─── FETCH WITH TIMEOUT ───────────────────────────────────────
+async function fetchT(url, ms = 6000) {
+  const ctrl = new AbortController();
+  const id = setTimeout(() => ctrl.abort(), ms);
+  try {
+    const r = await fetch(url, { signal: ctrl.signal });
+    clearTimeout(id); return r;
+  } catch(e) { clearTimeout(id); throw e; }
+}
+
+// ─── CLAUDE API ───────────────────────────────────────────────
+async function callClaude(system, user, maxTokens = 1200) {
+  const apiKey = document.getElementById('apiKey').value.trim();
+  if (!apiKey) throw new Error('Geen API key ingevuld');
+
+  const r = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true'
+    },
+    body: JSON.stringify({
+      model: 'claude-haiku-4-5',
+      max_tokens: maxTokens,
+      system,
+      messages: [{ role: 'user', content: user }]
+    })
+  });
+
+  if (!r.ok) {
+    const e = await r.json().catch(() => ({}));
+    throw new Error(`API fout: ${r.status}${e?.error?.message ? ' – ' + e.error.message : ''}`);
+  }
+  const d = await r.json();
+  return d.content?.[0]?.text || 'Geen resultaat.';
+}
+
+// ─── LIVE PRICES ─────────────────────────────────────────────
+async function fetchPrice(coin) {
+  const id = COIN_IDS[coin];
+  if (!id) return null;
+  try {
+    const r = await fetchT(`https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${id}&price_change_percentage=24h`);
+    const d = await r.json();
+    return d?.[0] || null;
+  } catch(e) { return null; }
+}
+
+async function loadPriceStrip() {
+  const strip = [
+    { id: 'btc', cg: 'bitcoin' },
+    { id: 'eth', cg: 'ethereum' },
+    { id: 'sol', cg: 'solana' },
+    { id: 'bnb', cg: 'binancecoin' }
+  ];
+  try {
+    const ids = strip.map(s => s.cg).join(',');
+    const r = await fetchT(`https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${ids}&price_change_percentage=24h`);
+    const data = await r.json();
+    data.forEach(c => {
+      const key = strip.find(s => s.cg === c.id)?.id;
+      if (!key) return;
+      const p = c.current_price;
+      const ch = c.price_change_percentage_24h;
+      document.getElementById('p-' + key).textContent =
+        p > 1000 ? '$' + (p/1000).toFixed(1) + 'k' :
+        p < 0.01 ? '$' + p.toFixed(6) : '$' + p.toFixed(2);
+      const cel = document.getElementById('c-' + key);
+      cel.textContent = (ch >= 0 ? '▲ +' : '▼ ') + ch.toFixed(2) + '%';
+      cel.style.color = ch >= 0 ? '#00ff88' : '#ff3355';
+    });
+  } catch(e) {}
+
+  // FIAS via DexScreener
+  try {
+    const r = await fetchT('https://api.dexscreener.com/latest/dex/tokens/0x21e88f4482cd48deab1ca5eddabdfb14cb8ad76f');
+    const d = await r.json();
+    const pair = d.pairs?.[0];
+    if (pair) {
+      const p = parseFloat(pair.priceUsd);
+      const ch = parseFloat(pair.priceChange?.h24 || 0);
+      document.getElementById('p-fias').textContent = '$' + p.toFixed(6);
+      const cel = document.getElementById('c-fias');
+      cel.textContent = (ch >= 0 ? '▲ +' : '▼ ') + ch.toFixed(2) + '%';
+      cel.style.color = ch >= 0 ? '#00ff88' : '#ff3355';
+    }
+  } catch(e) {}
+}
+
+
+// ─── TECHNISCHE ANALYSE (OHLCV + FIBONACCI + MARKET STRUCTURE) ────
+async function fetchOHLCV(coinId, days = 14) {
+  try {
+    const r = await fetchT(
+      `https://api.coingecko.com/api/v3/coins/${coinId}/ohlc?vs_currency=usd&days=${days}`,
+      8000
+    );
+    if (!r.ok) return null;
+    const data = await r.json();
+    // data = [[timestamp, open, high, low, close], ...]
+    return data;
+  } catch(e) { return null; }
+}
+
+function calcFibonacci(ohlcv) {
+  if (!ohlcv || ohlcv.length < 5) return null;
+  
+  // Zoek swing high en swing low over hele periode
+  let swingHigh = -Infinity, swingLow = Infinity;
+  ohlcv.forEach(c => {
+    if (c[2] > swingHigh) swingHigh = c[2]; // high
+    if (c[3] < swingLow)  swingLow  = c[3]; // low
+  });
+  
+  const diff = swingHigh - swingLow;
+  const lastClose = ohlcv[ohlcv.length - 1][4];
+  const trend = lastClose > (swingHigh + swingLow) / 2 ? 'bullish' : 'bearish';
+  
+  // Fibonacci retracement levels (van high naar low voor bearish, low naar high voor bullish)
+  const levels = {
+    '0.0':   swingHigh,
+    '0.236': swingHigh - diff * 0.236,
+    '0.382': swingHigh - diff * 0.382,
+    '0.5':   swingHigh - diff * 0.5,
+    '0.618': swingHigh - diff * 0.618,
+    '0.786': swingHigh - diff * 0.786,
+    '1.0':   swingLow,
+    // Extensions
+    '1.272': swingLow - diff * 0.272,
+    '1.618': swingLow - diff * 0.618,
+  };
+
+  // Vind dichtstbijzijnde support/resistance
+  const levArray = Object.entries(levels).map(([k, v]) => ({ name: k, price: v }));
+  const nearSupport = levArray.filter(l => l.price <= lastClose).sort((a,b) => b.price - a.price)[0];
+  const nearResist  = levArray.filter(l => l.price >= lastClose).sort((a,b) => a.price - b.price)[0];
+
+  return { swingHigh, swingLow, levels, lastClose, trend, nearSupport, nearResist, diff };
+}
+
+function calcMarketStructure(ohlcv) {
+  if (!ohlcv || ohlcv.length < 10) return null;
+
+  const closes = ohlcv.map(c => c[4]);
+  const highs  = ohlcv.map(c => c[2]);
+  const lows   = ohlcv.map(c => c[3]);
+  const n = closes.length;
+
+  // Detecteer swing highs en lows (lokale maxima/minima)
+  const swingHighs = [], swingLows = [];
+  for (let i = 2; i < n - 2; i++) {
+    if (highs[i] > highs[i-1] && highs[i] > highs[i-2] && highs[i] > highs[i+1] && highs[i] > highs[i+2]) {
+      swingHighs.push({ i, price: highs[i] });
+    }
+    if (lows[i] < lows[i-1] && lows[i] < lows[i-2] && lows[i] < lows[i+1] && lows[i] < lows[i+2]) {
+      swingLows.push({ i, price: lows[i] });
+    }
+  }
+
+  // Market structure bepalen
+  let structure = 'SIDEWAYS';
+  let bos = null, choch = null;
+
+  if (swingHighs.length >= 2 && swingLows.length >= 2) {
+    const lastHH = swingHighs[swingHighs.length - 1];
+    const prevHH = swingHighs[swingHighs.length - 2];
+    const lastLL = swingLows[swingLows.length - 1];
+    const prevLL = swingLows[swingLows.length - 2];
+
+    const isHH = lastHH.price > prevHH.price; // Higher High
+    const isHL = lastLL.price > prevLL.price; // Higher Low
+    const isLH = lastHH.price < prevHH.price; // Lower High
+    const isLL = lastLL.price < prevLL.price; // Lower Low
+
+    if (isHH && isHL) structure = 'BULLISH (HH+HL)';
+    else if (isLH && isLL) structure = 'BEARISH (LH+LL)';
+    else if (isHH && isLL) structure = 'MIXED — mogelijke omkering';
+    else if (isLH && isHL) structure = 'CONSOLIDATIE';
+
+    // Break of Structure
+    const lastClose = closes[n - 1];
+    if (lastClose > lastHH.price) bos = `BOS BOVEN $${lastHH.price.toFixed(2)} — bullish doorbraak`;
+    if (lastClose < lastLL.price) bos = `BOS ONDER $${lastLL.price.toFixed(2)} — bearish doorbraak`;
+
+    // Change of Character (eerste teken van omkering)
+    const recentBearish = structure.includes('BEARISH');
+    const recentBullish = structure.includes('BULLISH');
+    if (recentBearish && isHL) choch = 'CHoCH signaal — hogere bodem na downtrend (mogelijke omkering)';
+    if (recentBullish && isLH) choch = 'CHoCH signaal — lagere top na uptrend (mogelijke omkering)';
+  }
+
+  // RSI berekenen (14 periodes)
+  const rsi = calcRSI(closes, 14);
+
+  // EMA berekening
+  const ema20 = calcEMA(closes, 20);
+  const ema50 = calcEMA(closes, 50);
+  const lastClose = closes[n - 1];
+  const emaSignal = ema20 && ema50
+    ? (ema20 > ema50 ? 'EMA20 boven EMA50 (bullish)' : 'EMA20 onder EMA50 (bearish)')
+    : 'onvoldoende data';
+
+  return {
+    structure, bos, choch,
+    swingHighs: swingHighs.slice(-3),
+    swingLows:  swingLows.slice(-3),
+    rsi: rsi ? rsi.toFixed(1) : null,
+    rsiSignal: rsi ? (rsi > 70 ? 'overbought' : rsi < 30 ? 'oversold' : rsi > 55 ? 'bullish zone' : rsi < 45 ? 'bearish zone' : 'neutraal') : null,
+    ema20: ema20?.toFixed(2), ema50: ema50?.toFixed(2), emaSignal,
+    lastClose
+  };
+}
+
+function calcRSI(closes, period = 14) {
+  if (closes.length < period + 1) return null;
+  let gains = 0, losses = 0;
+  for (let i = 1; i <= period; i++) {
+    const diff = closes[i] - closes[i - 1];
+    if (diff > 0) gains += diff; else losses -= diff;
+  }
+  let avgGain = gains / period, avgLoss = losses / period;
+  for (let i = period + 1; i < closes.length; i++) {
+    const diff = closes[i] - closes[i - 1];
+    avgGain = (avgGain * (period - 1) + Math.max(diff, 0)) / period;
+    avgLoss = (avgLoss * (period - 1) + Math.max(-diff, 0)) / period;
+  }
+  if (avgLoss === 0) return 100;
+  return 100 - (100 / (1 + avgGain / avgLoss));
+}
+
+function calcEMA(closes, period) {
+  if (closes.length < period) return null;
+  const k = 2 / (period + 1);
+  let ema = closes.slice(0, period).reduce((a, b) => a + b, 0) / period;
+  for (let i = period; i < closes.length; i++) {
+    ema = closes[i] * k + ema * (1 - k);
+  }
+  return ema;
+}
+
+function formatTechContext(fib, ms) {
+  if (!fib && !ms) return '';
+  let ctx = '\n\n=== TECHNISCHE ANALYSE ===';
+
+  if (ms) {
+    ctx += `\nMarket Structure: ${ms.structure}`;
+    if (ms.bos)   ctx += `\n${ms.bos}`;
+    if (ms.choch) ctx += `\n${ms.choch}`;
+    if (ms.rsi)   ctx += `\nRSI(14): ${ms.rsi} — ${ms.rsiSignal}`;
+    ctx += `\n${ms.emaSignal}`;
+    if (ms.swingHighs.length) ctx += `\nLaatste swing highs: ${ms.swingHighs.map(h => '$'+h.price.toFixed(2)).join(', ')}`;
+    if (ms.swingLows.length)  ctx += `\nLaatste swing lows: ${ms.swingLows.map(l => '$'+l.price.toFixed(2)).join(', ')}`;
+  }
+
+  if (fib) {
+    const fmt = v => v >= 1 ? '$' + v.toLocaleString('en-US', {maximumFractionDigits: 2}) : '$' + v.toFixed(6);
+    ctx += `\n\nFibonacci (${fib.trend}):`;
+    ctx += `\nSwing High: ${fmt(fib.swingHigh)} | Swing Low: ${fmt(fib.swingLow)}`;
+    ctx += `\n0.236: ${fmt(fib.levels['0.236'])} | 0.382: ${fmt(fib.levels['0.382'])} | 0.5: ${fmt(fib.levels['0.5'])}`;
+    ctx += `\n0.618: ${fmt(fib.levels['0.618'])} | 0.786: ${fmt(fib.levels['0.786'])}`;
+    ctx += `\nExt 1.272: ${fmt(fib.levels['1.272'])} | Ext 1.618: ${fmt(fib.levels['1.618'])}`;
+    if (fib.nearSupport) ctx += `\nDichtstbijzijnde support: Fib ${fib.nearSupport.name} = ${fmt(fib.nearSupport.price)}`;
+    if (fib.nearResist)  ctx += `\nDichtstbijzijnde resistance: Fib ${fib.nearResist.name} = ${fmt(fib.nearResist.price)}`;
+  }
+
+  return ctx;
+}
+
+// ─── MAIN ANALYSIS ────────────────────────────────────────────
+async function runAnalysis() {
+  const apiKey = document.getElementById('apiKey').value.trim();
+  if (!apiKey) { alert('Vul eerst je Anthropic API key in!'); return; }
+
+  const coin = document.getElementById('coinSelect').value;
+  const tf   = document.getElementById('timeframe').value;
+  const risk = document.getElementById('riskProfile').value;
+  const amt  = document.getElementById('amount').value;
+  const lev  = selectedLev;
+
+  if (!coin) { alert('Selecteer een coin'); return; }
+
+  const btn = document.getElementById('analyzeBtn');
+  btn.disabled = true;
+  btn.textContent = '⚡ KOERS OPHALEN...';
+
+  document.getElementById('results').classList.add('visible');
+  document.getElementById('directionBar').className = 'direction-bar';
+  ['structure','signal','risk','execute'].forEach(id => {
+    loading(id); setChip(id, '');
+  });
+
+  // Live koers ophalen
+  const price = await fetchPrice(coin);
+  let priceCtx = '';
+  if (price) {
+    const p   = price.current_price;
+    const ch  = (price.price_change_percentage_24h ?? 0).toFixed(2);
+    const vol = (price.total_volume ?? 0) > 1e9
+      ? '$' + (price.total_volume/1e9).toFixed(2) + 'B'
+      : '$' + ((price.total_volume ?? 0)/1e6).toFixed(1) + 'M';
+    const pStr = p >= 1 ? p.toLocaleString('en-US') : p.toFixed(6);
+    priceCtx = ` | LIVE: $${pStr} | 24h: ${ch}% | Vol: ${vol}`;
+  }
+
+  // OHLCV + Fibonacci + Market Structure
+  btn.textContent = '⚡ INDICATOREN BEREKENEN...';
+  let techCtx = '';
+  const coinId = COIN_IDS[coin];
+  if (coinId && !coinId.startsWith('dexscreener')) {
+    try {
+      const days = tf.includes('scalp') || tf.includes('intraday') ? 7 : tf.includes('swing') ? 14 : 30;
+      const ohlcv = await fetchOHLCV(coinId, days);
+      if (ohlcv && ohlcv.length > 5) {
+        const fib = calcFibonacci(ohlcv);
+        const ms  = calcMarketStructure(ohlcv);
+        techCtx   = formatTechContext(fib, ms);
+      }
+    } catch(e) {}
+  }
+
+  const ctx = `Coin: ${coin} | Tijdframe: ${tf} | Risico: ${risk} | Kapitaal: $${amt} | Hefboom: ${lev}x${priceCtx}${techCtx}`;
+  const disc = 'Uitsluitend educatief. Gebruik de live koers. Geen garanties. Wees realistisch over leverage risico\'s.';
+
+  btn.textContent = '⚡ ENTITIES ACTIEF...';
+
+  // ENTITY 01: Market Structure
+  setChip('structure', 'running');
+  try {
+    const res = await callClaude(
+      `Je bent een crypto marktstructuur analist voor FIAS Arche. ${disc}
+Analyseer de marktstructuur voor leverage trading. Bespreek:
+- Huidige trend (bull/bear/sideways) en fase
+- Belangrijkste steun- en weerstandsniveaus
+- Of de trend LONG of SHORT favoreert voor ${tf}
+- Volume en momentum analyse
+Schrijf in het Nederlands, max 4 zinnen, geen bullet points.`, ctx);
+    document.getElementById('body-structure').innerHTML = renderMd(res);
+    setChip('structure', 'done');
+  } catch(e) { showError('structure', e.message); }
+
+  // ENTITY 02: Leverage Signal
+  setChip('signal', 'running');
+  try {
+    const res = await callClaude(
+      `Je bent een FIAS Arche leverage signaal generator voor Futures Analyse. ${disc}
+Genereer een concreet leverage signaal. Gebruik EXACT dit format:
+
+⚡ RICHTING: [LONG / SHORT]
+📍 Entry zone: [prijsrange]
+🎯 Take Profit 1: [prijs] ([+%])
+🎯 Take Profit 2: [prijs] ([+%])
+🛑 Stop Loss: [prijs] ([-% van entry])
+💥 Aanbevolen hefboom: [Xx] (max ${lev}x)
+💀 Liquidatieprijs bij ${lev}x: [prijs]
+💰 Positiegrootte: [$bedrag van $${amt}]
+📊 Risk/Reward: [ratio]
+🎯 Kans van slagen: [%]
+
+Schrijf in het Nederlands. Gebruik de live koers als basis.`, ctx);
+
+    document.getElementById('body-signal').innerHTML = renderMd(res);
+    setChip('signal', 'done');
+
+    // Direction bar updaten
+    const isLong = res.toUpperCase().includes('LONG');
+    const isShort = res.toUpperCase().includes('SHORT');
+    const bar = document.getElementById('directionBar');
+    if (isLong || isShort) {
+      bar.className = 'direction-bar visible ' + (isLong ? 'long' : 'short');
+      document.getElementById('directionIcon').textContent = isLong ? '📈' : '📉';
+      document.getElementById('directionText').textContent = isLong ? `LONG ${lev}x — ${coin}` : `SHORT ${lev}x — ${coin}`;
+    }
+  } catch(e) { showError('signal', e.message); }
+
+  // ENTITY 03: Risk Calculator
+  setChip('risk', 'running');
+  try {
+    const res = await callClaude(
+      `Je bent een FIAS Arche risico calculator voor leverage trading. ${disc}
+Bereken en beoordeel alle risico's voor deze ${lev}x leverage trade.
+
+Gebruik dit format:
+⚠️ Risico niveau: [LAAG / MEDIUM / HOOG / EXTREEM]
+💸 Max verlies bij SL: [$bedrag] ([% van $${amt}])
+💀 Liquidatieprijs bij ${lev}x: [berekening]
+📐 Aanbevolen margin: [$bedrag] ([% van kapitaal inzetten])
+🔒 Margin call niveau: [prijs]
+📉 Max drawdown voor liquidatie: [%]
+🔍 Risicofactoren:
+- [factor 1]
+- [factor 2]
+- [factor 3]
+
+Schrijf in het Nederlands.`, ctx);
+    document.getElementById('body-risk').innerHTML = renderMd(res);
+    setChip('risk', 'done');
+  } catch(e) { showError('risk', e.message); }
+
+  // ENTITY 04: Trade Executor
+  setChip('execute', 'running');
+  try {
+    const res = await callClaude(
+      `Je bent een FIAS Arche trade uitvoeringsadviseur. ${disc}
+Geef stap-voor-stap instructies voor het uitvoeren van deze ${lev}x leverage trade op Futures Analyse.
+
+Bespreek:
+1. Hoe de futures positie openen op je exchange (Cross/Isolated margin)
+2. Exacte hefboom instelling (${lev}x) en waarom
+3. Hoe stop loss instellen (TP/SL orders)
+4. Wanneer bijschalen of afbouwen
+5. 1 cruciale waarschuwing specifiek voor ${lev}x leverage
+
+Max 6 zinnen. Schrijf in het Nederlands.`, ctx);
+    document.getElementById('body-execute').innerHTML = renderMd(res);
+    setChip('execute', 'done');
+  } catch(e) { showError('execute', e.message); }
+
+  btn.disabled = false;
+  btn.textContent = '⚡ NIEUW SIGNAAL GENEREREN';
+}
+
+
+// ─── COIN SEARCH / LEVERAGE CHECKER ──────────────────────────
+async function searchLeverage() {
+  const apiKey = document.getElementById('apiKey').value.trim();
+  if (!apiKey) { alert('Vul eerst je Anthropic API key in!'); return; }
+
+  const query = document.getElementById('searchCoin').value.trim();
+  if (!query) { alert('Vul een coin naam in'); return; }
+
+  const lev  = selectedLev;
+  const tf   = document.getElementById('timeframe').value;
+  const risk = document.getElementById('riskProfile').value;
+  const amt  = document.getElementById('amount').value;
+
+  const btn = document.getElementById('searchBtn');
+  btn.disabled = true;
+  btn.textContent = 'ZOEKEN...';
+
+  const resultEl = document.getElementById('searchResult');
+  const oppBar   = document.getElementById('oppBar');
+  resultEl.className = 'search-result visible';
+  resultEl.innerHTML = '<div class="dots"><span></span><span></span><span></span></div>';
+  oppBar.className = 'opportunity-bar';
+
+  // Probeer live koers te vinden via CoinGecko search
+  let priceCtx = '';
+  let foundCoinId = null;
+  try {
+    const searchRes = await fetchT(`https://api.coingecko.com/api/v3/search?query=${encodeURIComponent(query)}`);
+    const searchData = await searchRes.json();
+    const coin = searchData.coins?.[0];
+    if (coin) {
+      foundCoinId = coin.id;
+      const priceRes = await fetchT(`https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${coin.id}&price_change_percentage=1h,24h`);
+      const priceData = await priceRes.json();
+      const c = priceData?.[0];
+      if (c && c.current_price) {
+        const p   = c.current_price;
+        const ch1 = (c.price_change_percentage_1h_in_currency ?? 0).toFixed(2);
+        const ch24 = (c.price_change_percentage_24h ?? 0).toFixed(2);
+        const vol = (c.total_volume ?? 0) > 1e9
+          ? '$' + (c.total_volume/1e9).toFixed(2) + 'B'
+          : '$' + (c.total_volume/1e6).toFixed(1) + 'M';
+        const pStr = p >= 1 ? p.toLocaleString('en-US') : p.toFixed(6);
+        priceCtx = `\nLIVE KOERS: $${pStr} | 1h: ${ch1}% | 24h: ${ch24}% | Vol: ${vol}`;
+      }
+    }
+  } catch(e) {}
+
+  // OHLCV + Fibonacci + Market Structure voor zoekopdracht
+  let searchTechCtx = '';
+  if (foundCoinId) {
+    try {
+      const ohlcv = await fetchOHLCV(foundCoinId, 14);
+      if (ohlcv && ohlcv.length > 5) {
+        const fib = calcFibonacci(ohlcv);
+        const ms  = calcMarketStructure(ohlcv);
+        searchTechCtx = formatTechContext(fib, ms);
+      }
+    } catch(e) {}
+  }
+
+  try {
+    const result = await callClaude(
+      `Je bent de FIAS Arche Leverage Kans Checker. Beoordeel of er een leverage trade kans is voor de opgegeven coin.
+
+START je antwoord ALTIJD met één van deze twee regels:
+✅ JA — ER IS EEN LEVERAGE KANS
+❌ NEE — GEEN GOEDE LEVERAGE KANS NU
+
+Dan geef je de analyse:
+
+Als JA:
+⚡ RICHTING: [LONG / SHORT]
+💥 Aanbevolen hefboom: [Xx] (max ${lev}x)
+📍 Entry zone: [prijs]
+🎯 TP1: [prijs] ([+%]) | TP2: [prijs] ([+%])
+🛑 Stop Loss: [prijs] ([-% van entry])
+💀 Liquidatie bij ${lev}x: [prijs]
+📊 R/R: [ratio] | Kans: [%]
+⚠️ Risico: [LAAG/MEDIUM/HOOG]
+
+📈 TECHNISCHE INDICATOREN (geschat o.b.v. prijsbeweging):
+- RSI (14): [waarde + betekenis]
+- Trend (MA): [boven/onder MA50/200]
+- Volume: [stijgend/dalend/normaal]
+- Momentum: [MACD signaal]
+- Patroon: [eventueel chart patroon]
+
+💡 CONCLUSIE: [2 zinnen waarom wel/niet]
+
+Als NEE: leg in 2-3 zinnen uit waarom niet en wanneer het wél interessant wordt.
+
+Tijdframe: ${tf} | Risico: ${risk} | Kapitaal: $${amt}
+Schrijf in het Nederlands. Geen garanties.`,
+      `Coin: ${query}${priceCtx}${searchTechCtx}`,
+      1500
+    );
+
+    // Check of er een kans is
+    const hasOpp = result.includes('✅');
+    const isLong = result.toUpperCase().includes('LONG');
+
+    oppBar.className = 'opportunity-bar visible ' + (hasOpp ? 'yes' : 'no');
+    document.getElementById('oppIcon').textContent = hasOpp ? (isLong ? '📈' : '📉') : '⏸️';
+    document.getElementById('oppText').textContent = hasOpp
+      ? (isLong ? `LONG KANS — ${query.toUpperCase()} ${lev}x` : `SHORT KANS — ${query.toUpperCase()} ${lev}x`)
+      : `GEEN KANS NU — ${query.toUpperCase()}`;
+
+    resultEl.innerHTML = renderMd(result);
+  } catch(e) {
+    resultEl.innerHTML = `<span style="color:#ff3355">❌ ${e.message}</span>`;
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'ANALYSEER';
+}
+
+// ─── MARKET SCANNER ───────────────────────────────────────────
+async function runScan() {
+  const apiKey = document.getElementById('apiKey').value.trim();
+  if (!apiKey) { alert('Vul eerst je Anthropic API key in!'); return; }
+
+  const tf   = document.getElementById('timeframe').value;
+  const risk = document.getElementById('riskProfile').value;
+  const amt  = document.getElementById('amount').value;
+  const lev  = selectedLev;
+
+  const scanBtn = document.getElementById('scanBtn');
+  scanBtn.disabled = true;
+  scanBtn.textContent = '🔍 KOERSEN OPHALEN...';
+
+  const scanSec = document.getElementById('scanSection');
+  scanSec.style.display = 'block';
+  document.getElementById('scanBody').innerHTML =
+    '<div class="dots"><span></span><span></span><span></span></div>';
+
+  // Alle coins ophalen via CoinGecko (2 batches van 30)
+  const allScanIds1 = [
+    'bitcoin','ethereum','solana','binancecoin','ripple','dogecoin',
+    'cardano','avalanche-2','chainlink','polkadot','litecoin','matic-network',
+    'pepe','shiba-inu','sui','the-open-network','uniswap','aptos',
+    'near','injective-protocol','arbitrum','optimism','sei-network',
+    'render-token','fetch-ai','celestia','jupiter-exchange-solana',
+    'bonk','dogwifcoin','notcoin'
+  ];
+  const allScanIds2 = [
+    'floki','bittensor','monad','devve','hedera-hashgraph','internet-computer','filecoin','stacks',
+    'immutable-x','the-sandbox','decentraland','axie-infinity','gala',
+    'blur','compound-governance-token','aave','curve-dao-token','maker',
+    'synthetix-network-token','1inch','dydx','gmx','hyperliquid'
+  ];
+  const ids = [...allScanIds1, ...allScanIds2].join(',');
+
+  let priceLines = [];
+  let fetchError = null;
+
+  try {
+    const url = `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${ids}&order=market_cap_desc&per_page=50&page=1&sparkline=false&price_change_percentage=1h%2C24h`;
+    const r = await fetchT(url, 8000);
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const data = await r.json();
+    if (!Array.isArray(data) || data.length === 0) throw new Error('Geen data ontvangen');
+
+    priceLines = data
+      .filter(c => c && c.current_price != null)
+      .map(c => {
+        const p   = c.current_price;
+        const ch1 = (c.price_change_percentage_1h_in_currency ?? 0).toFixed(2);
+        const ch24 = (c.price_change_percentage_24h ?? 0).toFixed(2);
+        const vol = (c.total_volume ?? 0) > 1e9
+          ? '$' + ((c.total_volume)/1e9).toFixed(2) + 'B'
+          : '$' + ((c.total_volume ?? 0)/1e6).toFixed(1) + 'M';
+        const mcap = (c.market_cap ?? 0) > 1e9
+          ? '$' + ((c.market_cap)/1e9).toFixed(1) + 'B'
+          : '$' + ((c.market_cap ?? 0)/1e6).toFixed(0) + 'M';
+        const ath_pct = (c.ath ?? 0) > 0 ? ((p / c.ath) * 100).toFixed(1) : '?';
+        const pStr = p >= 1 ? p.toLocaleString('en-US') : p.toFixed(6);
+        return `${(c.symbol||'?').toUpperCase()}/USDT: $${pStr} | 1h: ${ch1}% | 24h: ${ch24}% | Vol: ${vol} | MCap: ${mcap} | ATH%: ${ath_pct}%`;
+      });
+  } catch(e) {
+    fetchError = e.message;
+  }
+
+  if (priceLines.length === 0) {
+    document.getElementById('scanBody').innerHTML =
+      `<span style="color:#ff3355">❌ Koersen ophalen mislukt: ${fetchError || 'onbekende fout'}.<br>Controleer je internetverbinding en probeer opnieuw.</span>`;
+    scanBtn.disabled = false;
+    scanBtn.textContent = '🔍 SCAN MARKT OP LEVERAGE KANSEN';
+    return;
+  }
+
+  scanBtn.textContent = `🔍 ${priceLines.length} COINS ANALYSEREN...`;
+
+  const marktData = `=== LIVE MARKTDATA (${new Date().toLocaleTimeString('nl-NL')}) ===
+Tijdframe: ${tf} | Risico: ${risk} | Kapitaal: $${amt} | Max hefboom: ${lev}x
+
+${priceLines.join('\n')}`;
+
+  try {
+    const result = await callClaude(
+      `Je bent de FIAS Arche Leverage Scanner. Je analyseert live marktdata en geeft concrete LONG én SHORT leverage kansen.
+
+BELANGRIJK: Je HEBT de marktdata hieronder. Gebruik die direct voor je analyse.
+Zoek naar zowel LONG kansen (opwaartse trend, bullish signalen) als SHORT kansen (neerwaartse trend, bearish signalen).
+
+Geef TOP 3 kansen — mix van LONG en SHORT op basis van de data.
+Tijdframe: ${tf} | Risicoprofiel: ${risk} | Kapitaal: $${amt} | Max hefboom: ${lev}x
+
+Gebruik EXACT dit format per kans:
+
+🥇/🥈/🥉 [COIN/USDT] — 📈 LONG [Xx] / 📉 SHORT [Xx]
+📊 Signaal: [waarom LONG of SHORT op basis van de prijsdata]
+📍 Entry: $[prijs] | 🎯 TP1: $[doel] (+[%]) | TP2: $[doel] (+[%])
+🛑 Stop Loss: $[prijs] (-[%]) | 💀 Liquidatie bij ${lev}x: $[prijs]
+💰 Positiegrootte: $[bedrag van $${amt}] | 📊 R/R: [ratio] | Kans: [%]
+⚠️ Risico: [LAAG/MEDIUM/HOOG]
+
+Sluit af met 1 regel: algemeen marktsentiment (bull/bear/sideways).
+Schrijf in het Nederlands. Gebruik de exacte prijzen uit de data.`,
+      marktData,
+      2000
+    );
+
+    document.getElementById('scanBody').innerHTML = renderMd(result);
+    document.getElementById('scanTime').textContent =
+      new Date().toLocaleTimeString('nl-NL', {hour:'2-digit', minute:'2-digit'});
+  } catch(e) {
+    document.getElementById('scanBody').innerHTML =
+      `<span style="color:#ff3355">❌ ${e.message}</span>`;
+  }
+
+  scanBtn.disabled = false;
+  scanBtn.textContent = '🔍 SCAN MARKT OP LEVERAGE KANSEN';
+}
+
+// ─── INIT ─────────────────────────────────────────────────────
+(function init() {
+  // API key herstellen
+  const saved = localStorage.getItem('signalslev_apikey');
+  if (saved) document.getElementById('apiKey').value = saved;
+
+  // Coin dropdown vullen
+  const sel = document.getElementById('coinSelect');
+  sel.innerHTML = FUTURES_COINS.map(c =>
+    `<option value="${c}">${c}</option>`
+  ).join('');
+
+  // Prijzen laden
+  loadPriceStrip();
+})();
+</script>
+
+</body>
+</html>
