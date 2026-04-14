@@ -891,78 +891,87 @@ box-shadow: 0 0 18px rgba(255,170,0,0.07);
 display: none;
 position: fixed;
 inset: 0;
-background: rgba(0,0,0,0.82);
+background: rgba(0,0,0,0.55);
 z-index: 9999;
 align-items: flex-end;
 justify-content: center;
 padding: 0;
 }
-.modal-overlay.open {
-display: flex;
-}
+.modal-overlay.open { display: flex; }
 .modal-sheet {
-background: #0f0f1a;
-border: 1px solid rgba(255,170,0,0.4);
+background: #ffffff;
+border: 2px solid rgba(255,170,0,0.7);
+border-bottom: none;
 border-radius: 16px 16px 0 0;
 width: 100%;
 max-width: 640px;
 max-height: 88vh;
 display: flex;
 flex-direction: column;
+box-shadow: 0 -4px 24px rgba(255,170,0,0.18);
 animation: slideUp 0.28s ease both;
 }
 .modal-header {
 display: flex;
 align-items: center;
 justify-content: space-between;
-padding: 1rem 1.1rem 0.7rem;
-border-bottom: 1px solid rgba(255,170,0,0.18);
+padding: 0.85rem 1.1rem 0.7rem;
+border-bottom: 1px solid rgba(255,170,0,0.3);
 flex-shrink: 0;
+background: rgba(255,170,0,0.06);
+border-radius: 14px 14px 0 0;
 }
 .modal-title {
 font-family: ‘Orbitron’, monospace;
-font-size: 0.9rem;
+font-size: 0.75rem;
 font-weight: 700;
-color: var(–gold);
+color: #cc8800;
 letter-spacing: 0.1em;
 }
 .modal-close {
 background: transparent;
-border: 1px solid rgba(255,255,255,0.18);
-color: var(–muted);
+border: 1px solid rgba(0,0,0,0.18);
+color: #888;
 border-radius: 50%;
-width: 28px; height: 28px;
-font-size: 1rem;
+width: 26px; height: 26px;
+font-size: 0.9rem;
 cursor: pointer;
 display: flex; align-items: center; justify-content: center;
 flex-shrink: 0;
+transition: all 0.15s;
 }
-.modal-close:hover { border-color: var(–red); color: var(–red); }
+.modal-close:hover { border-color: #ff3355; color: #ff3355; }
 .modal-body {
 overflow-y: auto;
-padding: 1rem 1.1rem 1.5rem;
+padding: 1rem 1.1rem 2rem;
 flex: 1;
 font-family: ‘Share Tech Mono’, monospace;
-font-size: 0.72rem;
-line-height: 1.7;
-color: var(–text);
+font-size: 0.68rem;
+line-height: 1.85;
+color: #1a1a2e;
 -webkit-overflow-scrolling: touch;
+background: #ffffff;
+}
+.modal-body hr {
+border: none;
+border-top: 1px solid rgba(255,170,0,0.25);
+margin: 0.6rem 0;
 }
 .modal-loading {
 display: flex;
-gap: 5px;
+gap: 6px;
 justify-content: center;
-padding: 2rem 0;
+padding: 2.5rem 0;
 }
 .modal-loading span {
 width: 8px; height: 8px;
-background: var(–gold);
+background: #ffaa00;
 border-radius: 50%;
 animation: blink 1s infinite;
 }
 .modal-loading span:nth-child(2) { animation-delay: 0.2s; }
 .modal-loading span:nth-child(3) { animation-delay: 0.4s; }
-@keyframes blink { 0%,80%,100%{opacity:0.2} 40%{opacity:1} }
+@keyframes blink { 0%,80%,100%{opacity:0.15} 40%{opacity:1} }
 </style>
 
 <script>
@@ -1364,8 +1373,8 @@ function showError(id, msg) {
 function renderMd(text) {
   return text
     .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-    .replace(/^#{1,3}\s+(.+)$/gm, '<strong style="color:#1a2a6c">$1</strong>')
-    .replace(/\*\*(.+?)\*\*/g, '<strong style="color:#1a2a6c">$1</strong>')
+    .replace(/^#{1,3}\s+(.+)$/gm, '<strong style="color:#cc8800">$1</strong>')
+    .replace(/\*\*(.+?)\*\*/g, '<strong style="color:#cc8800">$1</strong>')
     .replace(/^---+$/gm, '<hr style="border:none;border-top:1px solid #ddd;margin:5px 0">')
     .replace(/\n\n+/g, '<br>')
     .replace(/\n/g, ' ');
@@ -2323,7 +2332,7 @@ ${priceLines.join('\n')}`,
           </div>
           <div class="hit-dir" style="color:${dirColor}">${dirIcon} ${h.richting} &bull; ${lev}x hefboom</div>
           <div style="font-size:0.58rem;color:#aaa;margin-top:3px">${h.reden}</div>
-          <div class="hit-time">${timeStr} &nbsp;· Klik voor detail ▸</div>
+          <div class="hit-time">${timeStr} &nbsp;· Tik voor detail ▸</div>
         `;
         hitsEl.insertBefore(div, hitsEl.firstChild);
       });
@@ -2338,65 +2347,6 @@ ${priceLines.join('\n')}`,
     statusText.textContent = `AI fout: ${e.message}`;
   }
 }
-
-// ─── TRADE DETAIL MODAL ──────────────────────────────
-function closeHitModal() {
-  document.getElementById('hitModal').classList.remove('open');
-}
-
-async function openHitModal(h, lev, tf, priceLines) {
-  const apiKey = document.getElementById('apiKey').value.trim();
-  const modal = document.getElementById('hitModal');
-  const body = document.getElementById('modalBody');
-  const title = document.getElementById('modalTitle');
-
-  title.textContent = `⚡ ${h.coin}/USDT — ${h.richting} ${lev}x`;
-  body.innerHTML = '<div class="modal-loading"><span></span><span></span><span></span></div>';
-  modal.classList.add('open');
-
-  if (!apiKey) {
-    body.innerHTML = '<span style="color:#ff3355">❌ Vul eerst je API key in.</span>';
-    return;
-  }
-
-  const coinLine = priceLines.find(l => l.startsWith(h.coin + '/USDT')) || '';
-
-  try {
-    const result = await callClaude(
-      `Je bent een crypto leverage trade analist voor FIAS Arche. Geef een gedetailleerde trade breakdown voor onderstaande kans. Schrijf in het Nederlands.
-
-Gebruik EXACT dit format:
-
-⚡ RICHTING: ${h.richting}
-📍 Entry zone: [prijsrange op basis van live koers]
-🎯 Take Profit 1: [prijs] (+[%])
-🎯 Take Profit 2: [prijs] (+[%])
-🎯 Take Profit 3: [prijs] (+[%])
-🛑 Stop Loss: [prijs] (-[%])
-💀 Liquidatie bij ${lev}x: [prijs]
-📊 Risk/Reward: [ratio]
-🎯 Slagingskans: ${h.kans}%
-⏱ Tijdframe: ${tf}
-⚠️ Risico: [LAAG/MEDIUM/HOOG]
-
-📝 Onderbouwing (max 3 zinnen):
-${h.reden}
-
-💡 Uitvoeringstips:
-1. [tip 1]
-2. [tip 2]
-3. [tip 3]
-
-Gebruik de live koersdata hieronder als basis voor exacte prijzen.`,
-      `LIVE KOERSDATA:\n${coinLine || priceLines.slice(0,5).join('\n')}`,
-      800
-    );
-    body.innerHTML = renderMd(result);
-  } catch(e) {
-    body.innerHTML = `<span style="color:#ff3355">❌ ${e.message}</span>`;
-  }
-}
-
 // ─── INIT ─────────────────────────────────────────────────────
 (function init() {
   // API key herstellen
@@ -2418,8 +2368,6 @@ Gebruik de live koersdata hieronder als basis voor exacte prijzen.`,
   loadPriceStrip();
 })();
 </script>
-
-<!-- ── DETAIL MODAL ── -->
 
 <div id="hitModal" class="modal-overlay" onclick="if(event.target===this)closeHitModal()">
   <div class="modal-sheet">
